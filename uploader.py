@@ -28,7 +28,7 @@ def clean_amazon_url(url):
     if asin_match:
         asin = asin_match.group(2)
         # Rebuild a clean short link using your store tag
-        return f"https://amazon.in/dp/{asin}/?tag={os.getenv('Affiliate_Code')}"
+        return f"https://amazon.com/dp/{asin}/?tag={os.getenv('Affiliate_Code')}"
     return url
 
 def get_youtube_service():

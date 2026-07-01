@@ -355,7 +355,7 @@ def scrape_specific_product(driver, product_url):
         return {
             "asin": asin,
             "name": name,
-            "link": f"https://www.amazon.in/dp/{asin}?tag={os.getenv('Affiliate_Code')}",
+            "link": f"https://www.amazon.com/dp/{asin}?tag={os.getenv('Affiliate_Code')}",
             "price": price,
             "specs": specs,
             "images": img_paths

@@ -15,7 +15,7 @@ def clean_amazon_url(url):
     asin_match = re.search(r'/(dp|gp/product)/([A-Z0-9]{10})', url)
     if asin_match:
         asin = asin_match.group(2)
-        return f"https://amazon.in/dp/{asin}/?tag={os.getenv('Affiliate_Code')}"
+        return f"https://amazon.com/dp/{asin}/?tag={os.getenv('Affiliate_Code')}"
     return url
 
 def upload_to_tmpfiles(local_video_path):

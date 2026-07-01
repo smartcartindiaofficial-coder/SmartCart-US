@@ -482,7 +482,7 @@ def start_daily_routine():
                     thumb_dest_path = os.path.join(folder, f"tn_{asin}.jpg")
                     shutil.move(generated_thumb_path, thumb_dest_path)
                 
-                product_url = f"https://www.amazon.in/dp/{asin}?tag={os.getenv('Affiliate_Code')}"
+                product_url = f"https://www.amazon.com/dp/{asin}?tag={os.getenv('Affiliate_Code')}"
                 current_category = item.get('category', 'Default')
                 selected_tags = CATEGORY_HASHTAGS.get(current_category, CATEGORY_HASHTAGS["Default"])
                 hashtag_string_block = " ".join(selected_tags)
@@ -627,7 +627,7 @@ def run_manual_post(url):
             print(f"📦 Thumbnail moved cleanly to asset archive: {thumb_dest_path}")
 
         # Build correct absolute affiliate link
-        product_url = f"https://www.amazon.in/dp/{product['asin']}?tag={os.getenv('Affiliate_Code')}"
+        product_url = f"https://www.amazon.com/dp/{product['asin']}?tag={os.getenv('Affiliate_Code')}"
 
         # --- 📈 DYNAMIC ALGORITHMIC TAG COMPILER ---
         # 1. Identify which category scout.py extracted (Fallback to Default if missing)
@@ -696,5 +696,5 @@ if __name__ == "__main__":
     cleanup_temp_files()
     start_daily_routine()    
     
-    # manual_url = "https://www.amazon.in/dp/B0CZ8YG4GN"
+    # manual_url = "https://www.amazon.com/dp/B0CZ8YG4GN"
     # run_manual_post(manual_url)
