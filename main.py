@@ -696,5 +696,5 @@ if __name__ == "__main__":
     # cleanup_temp_files()
     # start_daily_routine()    
     
-    manual_url = "https://www.amazon.com/dp/B085DTZQNZ"
+    manual_url = "https://www.amazon.com/dp/B0B8STRJYJ"
     run_manual_post(manual_url)
