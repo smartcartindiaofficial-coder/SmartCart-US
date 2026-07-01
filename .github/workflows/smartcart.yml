@@ -1,0 +1,68 @@
+name: SmartCart India Automation
+
+on:
+  # schedule:
+  #   # GitHub uses UTC (Universal Time). We subtract 5 hours and 30 minutes from IST.
+  #   - cron: '18 3 * * *'   # ~8:48 AM IST (Morning Run)
+  #   - cron: '23 8 * * *'   # ~1:53 PM IST (Afternoon Run)
+  #   - cron: '12 14 * * *'  # ~7:42 PM IST (Evening Run)
+  workflow_dispatch:      # This allows you to click a button on GitHub to test it manually anytime!
+
+jobs:
+  run-smartcart-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Fetch your code files from your repository onto the cloud machine
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Setup a standard stable Python runtime environment
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip' # Speeds up installations on subsequent runs
+
+    # 3. Install core system video encoders (FFmpeg) and Chrome for scraping
+    - name: Install System Linux Packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg chromium-browser
+
+    # 4. Install all Python packages required by your scripts
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # 5. Execute your main framework script while feeding it keys securely
+    - name: Run SmartCart Engine Pipeline
+      env:
+        HISTORY_FILE: "upload_history.csv"
+        AMAZON_AFFILIATE_TAG: ${{ secrets.AMAZON_AFFILIATE_TAG }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+        Affiliate_Code: ${{ secrets.Affiliate_Code }}
+        CLIENT_SECRETS_DATA: ${{ secrets.CLIENT_SECRETS_JSON }}
+        TOKEN_BASE64: ${{ secrets.YOUTUBE_TOKEN_BASE64 }}
+        GITHUB_USERNAME: ${{ secrets.MY_GITHUB_USERNAME }}
+      run: |
+        echo "$CLIENT_SECRETS_DATA" > client_secrets.json
+        # Decodes the safe text string back into a pristine binary token file
+        echo "$TOKEN_BASE64" | base64 --decode > token.pickle
+        python main.py
+
+    # 6. Capture changes to upload_history.csv and index.html, then commit back to repo
+    - name: Commit and Save Logs & Frontend Progress
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Automation Bot"
+        git add upload_history.csv index.html assets/ Exports/
+        # The || true prevents the script from crashing if there are no new deals to save
+        git diff-index --quiet HEAD || git commit -m "Automated Sync: History & Deals Updated [skip ci]" || true
+        git push

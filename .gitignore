@@ -1,0 +1,11 @@
+# Sensitive environment credentials
+Config.env
+*.env
+
+# Google API login tokens and secrets
+token.pickle
+client_secrets.json
+
+# Local network tools and cache
+ngrok.exe
+__pycache__/

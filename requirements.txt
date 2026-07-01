@@ -1,0 +1,17 @@
+selenium
+webdriver-manager
+pandas
+python-dotenv
+google-genai
+groq
+moviepy
+opencv-python
+numpy
+edge-tts
+onnxruntime
+rembg
+pillow
+requests
+pyTelegramBotAPI
+google-api-python-client
+google-auth-oauthlib
