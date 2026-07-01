@@ -659,11 +659,11 @@ def run_manual_post(url):
         tags = "amazon, deals, US, gadget"
         youtube_url = uploader.upload_to_youtube(None, video_path, viral_title, description_text, backend_yt_tags)
 
-        # Pass that exact youtube_url string into your updated uploader module!
-        insta_uploader.upload_to_instagram(video_path, description_text)
+        # # Pass that exact youtube_url string into your updated uploader module!
+        # insta_uploader.upload_to_instagram(video_path, description_text)
 
-        # # Telegram (Funnel the captured YouTube URL string directly into our layout parameter)
-        telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url = '')
+        # # # Telegram (Funnel the captured YouTube URL string directly into our layout parameter)
+        # telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url = '')
 
         # 8. RECORD HISTORY
         record_upload(product['asin'], viral_title)
@@ -693,8 +693,8 @@ def run_manual_post(url):
         
 
 if __name__ == "__main__":
-    cleanup_temp_files()
-    start_daily_routine()    
+    # cleanup_temp_files()
+    # start_daily_routine()    
     
-    # manual_url = "https://www.amazon.com/dp/B0CZ8YG4GN"
-    # run_manual_post(manual_url)
+    manual_url = "https://www.amazon.com/dp/B085DTZQNZ"
+    run_manual_post(manual_url)

@@ -321,9 +321,13 @@ def scrape_specific_product(driver, product_url):
 
     try:
         name = driver.find_element(By.ID, "productTitle").text.strip()
+        print(f"name: {name}")
         asin = product_url.split("/dp/")[1].split("/")[0] if "/dp/" in product_url else "MANUAL"        
+        print(f"asin: {asin}")
         bullets = driver.find_elements(By.CSS_SELECTOR, "#feature-bullets ul li span")
+        print(f"bullets: {bullets}")
         specs = " | ".join([b.text.strip() for b in bullets if len(b.text.strip()) > 10][:3])
+        print(f"specs: {specs}")
         try:
             price = driver.find_element(By.CSS_SELECTOR, "span.a-price-whole").text
             price = f"₹{price}"
@@ -332,25 +336,47 @@ def scrape_specific_product(driver, product_url):
 
         img_paths = []
         thumbs = driver.find_elements(By.CSS_SELECTOR, "#altImages img")
+        print(f"thumbs: {thumbs}")
         found = 0
         for idx, img in enumerate(thumbs):
-            if found >= 7: break
-            src = img.get_attribute("src")
-            if not src: continue
+                if found >= 7: break
+            
+                # 1. Pull the element attributes
+                alt_text = (img.get_attribute("alt") or "").strip().lower()
+                src = img.get_attribute("data-old-hires") or img.get_attribute("src")
+                
+                if not src:
+                    continue
 
-            if "play-button" not in src and "._S" in src:
-                high_res = src.split("._")[0] + ".jpg"                
+                # 🚀 STRICT FILTER: Drop video cards based on explicit text values or thumbnail decorations
+                if "video" in alt_text:
+                    print(f"⏭️ Skipping element {idx}: Matched alt label '{img.get_attribute('alt')}'")
+                    continue
+                    
+                if any(x in src for x in ["play-button", "gif", "inline-twister", "video-placeholder", "play-icon-overlay","png"]):
+                    print(f"⏭️ Skipping element {idx}: Detected video/interactive decoration string in URL")
+                    continue
+                                    
+                # 2. Convert thumbnail asset signature into clean, full-resolution image path
+                high_res = src
+                if "._S" in src:
+                    high_res = src.split("._S")[0] + ".jpg"
+                elif "._" in src:
+                    high_res = src.split("._")[0] + ".jpg"
+                    
                 try:
-                    local_file = os.path.join(os.getcwd(), f"manual_temp_{found}.jpg")
+                    local_file = os.path.join(os.getcwd(), f"Manual_temp_{idx}.jpg")
                     opener = urllib.request.build_opener()
-                    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+                    opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')]
                     urllib.request.install_opener(opener)                    
                     urllib.request.urlretrieve(high_res, local_file)                    
-                    if os.path.getsize(local_file) > 1000: # Ensure it's a real image
+                    if os.path.getsize(local_file) > 1000: # Ensure it's a real valid image
                         img_paths.append(local_file)
                         found += 1
                 except Exception as e:
                     print(f"❌ Download failed: {e}")
+        
+        print(f"image count: {len(img_paths)}")
 
         return {
             "asin": asin,

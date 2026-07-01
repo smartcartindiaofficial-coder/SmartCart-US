@@ -50,7 +50,7 @@ def generate_voiceover(text, output_audio_path):
 
     async def render_segments():
         # ⚡ Hook segment: Spoken with higher urgency (+10% speech rate)
-        communicate_hook = edge_tts.Communicate(hook, selected_voice, rate="+20%", volume="+35%")
+        communicate_hook = edge_tts.Communicate(hook, selected_voice, rate="+15%", volume="+50%")
         await communicate_hook.save(temp_hook_path)
 
         # 🍃 Body segment: Spoken at a normal, smooth narrator pace (-6% speech rate)

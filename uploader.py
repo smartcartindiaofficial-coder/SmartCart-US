@@ -44,12 +44,12 @@ def get_youtube_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            if not os.path.exists('client_secrets.json'):
+            if not os.path.exists('client_secret_us.json'):
                 raise FileNotFoundError(
-                    "❌ 'client_secrets.json' missing! Please download it from Google Cloud Console "
+                    "❌ 'client_secret_us.json' missing! Please download it from Google Cloud Console "
                     "and place it in your root folder: {current_working_dir}"
                 )
-            flow = InstalledAppFlow.from_client_secrets_file('client_secrets.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file('client_secret_us.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('token.pickle', 'wb') as token:
@@ -108,36 +108,6 @@ def upload_to_youtube(driver, video_path, title, description, tags):
         print(f"🎉 SUCCESS: Video Published via API! Video ID: {response['id']}")
         youtube_video_id = response['id']
         
-        # # ─── 🚀 AUTOMATED FIRST COMMENT YOUTUBE LAYER ───
-        # try:
-        #     print("💬 Dropping pinned-style channel comment onto YouTube Short...")
-        #     import re
-        #     link_match = re.search(r'https://[^\s]+', description)
-        #     buy_link = link_match.group(0) if link_match else ""
-            
-        #     comment_body = {
-        #         "snippet": {
-        #             "videoId": youtube_video_id,
-        #             "topLevelComment": {
-        #                 "snippet": {
-        #                     'textOriginal': f"🛍️ Clickable Direct Buy Link: {clean_amazon_url(buy_link)}\n\n👉 Subscribe for daily smart tech finds!"
-        #                 }
-        #             }
-        #         }
-        #     }
-        #     # Execute the comment insert API call using the same authenticated 'youtube' service object
-        #     youtube.commentThreads().insert(
-        #         part="snippet",
-        #         body=comment_body
-        #     ).execute()
-        #     print("✅ YouTube channel first comment dropped successfully!")
-        # except Exception as yt_comment_err:
-        #     print(f"⚠️ Could not drop automated YouTube comment: {yt_comment_err}")
-        # # ────────────────────────────────────────────────
-
-        # ────────────────────────────────────────────────
-        # 📊 AUTOMATED CONVERSION COMMENT & POLL SYSTEM
-        # ────────────────────────────────────────────────
         try:
             print("💬 Checking timezone metrics for automated pinned comment styling...")
             import re
@@ -200,7 +170,7 @@ def upload_to_youtube(driver, video_path, title, description, tags):
                     f"🆃 Option C: Premium Design & Brand Trust\n\n"
                     f"👇 Reply below with your choice (A, B, or C)!\n\n"
                     f"🛍️ Direct Buy Link: {clean_url}\n"
-                    f"👉 Subscribe to SmartCart India for daily smart finds!"
+                    f"👉 Subscribe to SmartCart US for daily smart finds!"
                 )
             else:
                 # Default clean comment layout for standard posting windows
