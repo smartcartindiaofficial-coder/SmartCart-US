@@ -42,7 +42,7 @@ def post_to_telegram(product_name, product_link, media_path, youtube_url=None, p
     caption += (
         f"💰 <b>Price:</b> {price}\n"
         f"🔗 <a href='{product_link}'>Click Here to Buy on Amazon</a>\n\n"
-        f"#AmazonFinds #SmartCartIndia #Deals"
+        f"#AmazonFinds #SmartCartUS #Deals"
     )
     
     try:

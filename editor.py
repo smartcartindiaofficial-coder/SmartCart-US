@@ -14,15 +14,10 @@ except ImportError:
 
 def generate_voiceover(text, output_audio_path):
     voice_pool = [
-        "en-IN-PrabhatNeural",  # Clear Indian English (Male)
-        "en-IN-NeerjaNeural",   # Smooth Indian English (Female)
-        "en-US-GuyNeural",      # Natural US English (Male)
-        "en-US-AriaNeural",     # Natural US English (Female)
-        "en-GB-RyanNeural",     # Professional UK English (Male)
-        "en-GB-SoniaNeural"     # Professional UK English (Female)
-        "en-IN-KavyaNeural",      # Female - Natural conversational tone, very popular
-        "en-IN-AnanyaNeural",     # Female - Crisp, clear, friendly narrative tone
-        "en-IN-MadhurNeural",     # Male   - Natural, casual tone, sounds like a product reviewer
+        "en-US-GuyNeural",         # Conversational US Male
+        "en-US-AriaNeural",        # Conversational US Female
+        "en-US-ChristopherNeural", # Clear narrative tone
+        "en-US-JennyNeural"        # Bright, popular content creator style
     ]
 
     selected_voice = random.choice(voice_pool)

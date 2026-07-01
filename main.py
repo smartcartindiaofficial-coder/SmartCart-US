@@ -49,14 +49,14 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 # Selected 5 premium niche tags per category to ensure optimal indexing 
 # on both YouTube Shorts and Instagram Reels safely.
 CATEGORY_HASHTAGS = {
-    "Baby Products": ["#BabyProducts", "#ParentingHacks", "#BabyMustHaves", "#BabyRegistry", "#SmartCartIndia"],
-    "Computers & Accessories": ["#TechFinds", "#DeskSetup", "#TechGadgets", "#PCGaming", "#SmartCartIndia"],
-    "Home & Kitchen": ["#KitchenGadgets", "#HomeKitchen", "#KitchenHacks", "#SmartHomeTech", "#SmartCartIndia"],
-    "Home Improvement": ["#HomeImprovement", "#DIYProjects", "#SmartHome", "#HardwareTools", "#SmartCartIndia"],
-    "Car & Motorbike": ["#CarAccessories", "#CarGadgets", "#MotorbikeLife", "#AutomotiveFinds", "#SmartCartIndia"],
-    "Clothing & Accessories": ["#FashionFinds", "#OOTDIndia", "#AmazonFashion", "#StyleInspiration", "#SmartCartIndia"],
-    "Jewellery": ["#JewelleryDesign", "#FashionJewellery", "#AccessoriesLovers", "#JewelleryDeals", "#SmartCartIndia"],
-    "Default": ["#AmazonFinds", "#TrendingGadgets", "#SmartCartIndia", "#ViralProducts", "#DailyDeals","#Amazon", "#Trending", "#Viral", "#Deals","#Gadgets","#Smart"]
+    "Baby Products": ["#BabyProducts", "#ParentingHacks", "#BabyMustHaves", "#BabyRegistry", "#SmartCartUS"],
+    "Computers & Accessories": ["#TechFinds", "#DeskSetup", "#TechGadgets", "#PCGaming", "#SmartCartUS"],
+    "Home & Kitchen": ["#KitchenGadgets", "#HomeKitchen", "#KitchenHacks", "#SmartHomeTech", "#SmartCartUS"],
+    "Home Improvement": ["#HomeImprovement", "#DIYProjects", "#SmartHome", "#HardwareTools", "#SmartCartUS"],
+    "Car & Motorbike": ["#CarAccessories", "#CarGadgets", "#MotorbikeLife", "#AutomotiveFinds", "#SmartCartUS"],
+    "Clothing & Accessories": ["#FashionFinds", "#OOTDUS", "#AmazonFashion", "#StyleInspiration", "#SmartCartUS"],
+    "Jewellery": ["#JewelleryDesign", "#FashionJewellery", "#AccessoriesLovers", "#JewelleryDeals", "#SmartCartUS"],
+    "Default": ["#AmazonFinds", "#TrendingGadgets", "#SmartCartUS", "#ViralProducts", "#DailyDeals","#Amazon", "#Trending", "#Viral", "#Deals","#Gadgets","#Smart"]
 }
 
 def reframe_product_for_youtube(raw_name, raw_specs):
@@ -236,7 +236,7 @@ def compile_landing_page(asin, name, product_url, local_image_path, price, outpu
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Best Daily Deals - SmartCart India 🔥</title>
+    <title>🔥 Best Daily Deals - SmartCart US 🔥</title>
     <style>
         :root {{ --bg: #0d0d11; --card-bg: #16161f; --text: #f3f4f6; --accent: #ff9900; --border: #262636; }}
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -258,7 +258,7 @@ def compile_landing_page(asin, name, product_url, local_image_path, price, outpu
 </head>
 <body>
     <div class="header-panel">
-        <h1>🛒 SmartCart India Deals</h1>
+        <h1>🛒 SmartCart US Deals</h1>
         <p>Click any product below to grab the live discount link direct from Amazon!</p>
     </div>
     <div class="deals-container" id="deals-wrapper">
@@ -656,7 +656,7 @@ def run_manual_post(url):
 
         # 7. POST TO PLATFORMS        
         # YouTube (API Method - Returns YouTube Link String)
-        tags = "amazon, deals, india, gadget"
+        tags = "amazon, deals, US, gadget"
         youtube_url = uploader.upload_to_youtube(None, video_path, viral_title, description_text, backend_yt_tags)
 
         # Pass that exact youtube_url string into your updated uploader module!
