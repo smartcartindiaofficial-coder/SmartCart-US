@@ -848,16 +848,32 @@ def get_bestsellers(driver, count):
             thumbs = []
 
             try:
-                # Target the main product display image
-                main_img = driver.find_element(By.ID, "landingImage")
-                dyn_img_attr = main_img.get_attribute("data-a-dynamic-image")
-                
-                if dyn_img_attr:
-                    # data-a-dynamic-image contains a JSON string like: {"URL_1": [width, height], "URL_2": [...]}
-                    dyn_data = json.loads(dyn_img_attr)
-                    # Sort or pick keys (which are the image URLs)
-                    high_res_urls = list(dyn_data.keys())
-                    print(f"📸 Strategy 1: Extracted {len(high_res_urls)} assets from landingImage dynamic matrix.")
+                # Find all distinct structural image items that have dynamic image configurations
+                image_elements = driver.find_elements(By.XPATH, "//*[@data-a-dynamic-image]")
+                seen_base_images = set()
+
+                for el in image_elements:
+                    dyn_img_attr = el.get_attribute("data-a-dynamic-image")
+                    if not dyn_img_attr or len(high_res_urls) >= 7:
+                        continue
+                        
+                    try:
+                        # Convert resolution map to python dictionary
+                        dyn_data = json.loads(dyn_img_attr)
+                        if dyn_data:
+                            # Pull out the target URL with the maximum resolution width (index 0 of the dimensions list)
+                            best_url = max(dyn_data.items(), key=lambda item: item[1][0])[0]
+                            
+                            # Clean up base identifier (e.g., matching the unique asset token ID) to prevent duplicates
+                            base_identifier = best_url.split("/images/I/")[1].split(".")[0] if "/images/I/" in best_url else best_url
+                            
+                            if base_identifier not in seen_base_images:
+                                seen_base_images.add(base_identifier)
+                                high_res_urls.append(best_url)
+                    except Exception:
+                        continue
+                        
+                print(f"📸 Strategy 1: Extracted {len(high_res_urls)} distinct product image targets.")
             except Exception as e:
                 print(f"⚠️ Strategy 1 failed or bypassed: {e}")
 
@@ -899,6 +915,7 @@ def get_bestsellers(driver, count):
                     continue
                     
                 try:
+                    # ✅ FIXED: Changed hardcoded index high_res_urls[0] to unique loop item 'high_res'
                     local_file = os.path.join(os.getcwd(), f"temp_{i}_{idx}.jpg")
                     
                     # Spoof headers clearly to match your Selenium session profile

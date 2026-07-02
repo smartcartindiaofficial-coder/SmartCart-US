@@ -497,8 +497,8 @@ def start_daily_routine():
                     f.write(description_text)
 
                 youtube_url = uploader.upload_to_youtube(None, video_path, viral_title, description_text, backend_yt_tags)
-                insta_uploader.upload_to_instagram(video_path, description_text, product_url)
-                telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url=youtube_url)                
+                # # insta_uploader.upload_to_instagram(video_path, description_text, product_url)
+                # # telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url=youtube_url)                
 
                 record_upload(asin, viral_title)
 
@@ -688,8 +688,7 @@ def run_manual_post(url):
         
 
 if __name__ == "__main__":
-    # cleanup_temp_files()
-    # start_daily_routine()    
+    start_daily_routine()    
     
-    manual_url = "https://www.amazon.com/dp/B0B8STRJYJ"
-    run_manual_post(manual_url)
+    # manual_url = "https://www.amazon.com/dp/B0B8STRJYJ"
+    # run_manual_post(manual_url)
