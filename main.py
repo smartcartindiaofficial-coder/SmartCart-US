@@ -399,6 +399,8 @@ def start_daily_routine():
         if os.getenv("GITHUB_ACTIONS") == "true":
             print("🌐 Cloud Environment Detected: Configuring Headless Chromium...")
             options.add_argument("--headless=new")
+            options.add_argument('--window-size=1920,1080')
+            options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-gpu")
@@ -584,11 +586,6 @@ def run_manual_post(url):
 
         # 5. CREATE VIDEO 
         print(f"🎬 Generating Manual Video for: {safe_name[:30]}")
-
-        # --- 🎙️ GENERATING THE NARRATION SCRIPT FOR THE VOICEOVER ---
-        # Extract first 2 bullet points from specifications for a clean, short audio loop
-        # clean_specs_list = [s.strip() for s in specs.split('\n-') if s.strip()]
-        # short_specs_summary = " ".join(clean_specs_list[:2])
         
         viral_title, viral_voiceover_script = reframe_product_for_youtube(safe_name, specs)
         

@@ -27,8 +27,8 @@ jobs:
     # 3. Install core system video encoders (FFmpeg) and Chrome for scraping
     - name: Install System Linux Packages
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg chromium-browser
+        sudo apt-get update -y
+        sudo apt-get install -y ffmpeg
 
     # 4. Install all Python packages required by your scripts
     - name: Install Python Dependencies
