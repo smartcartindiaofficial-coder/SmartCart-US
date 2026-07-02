@@ -232,14 +232,20 @@ def get_bestsellers(driver, count):
             img_paths = []
             thumbs = []
             try:
-                # Check if standard thumbnails exist within a reasonable 10s wait window
+                # 1. Wait until the elements exist AND at least some of them have loaded actual image URLs
                 WebDriverWait(driver, 10).until(
-                    lambda d: d.find_elements(By.CSS_SELECTOR, "#altImages img") or 
+                    lambda d: [
+                        img for img in (
+                            d.find_elements(By.CSS_SELECTOR, "#altImages img") + 
                             d.find_elements(By.CSS_SELECTOR, "#altimages img")
-                )
+                        )
+                        # Ensure the src attribute exists, is not empty, and isn't just a tiny transparent placeholder/data URI
+                        if img.get_attribute("src") and not img.get_attribute("src").startswith("data:image/gif")
+                    ]
+                )                
+                # 2. Safely grab the elements now that we know they have content
                 thumbs = driver.find_elements(By.CSS_SELECTOR, "#altImages img, #altimages img")
-                print(f"✅ Successfully found standard thumbnail grid. Elements: {len(thumbs)}")
-                
+                print(f"✅ Successfully found standard thumbnail grid with loaded images. Elements: {len(thumbs)}")                
             except Exception:
                 print("⏳ Standard thumbnail container missing (Anti-bot layout detected). Engaging emergency image grabber...")
                 # 🚀 Fix 3: Target the main display images, variant arrays, or main view panels directly
@@ -321,13 +327,9 @@ def scrape_specific_product(driver, product_url):
 
     try:
         name = driver.find_element(By.ID, "productTitle").text.strip()
-        print(f"name: {name}")
-        asin = product_url.split("/dp/")[1].split("/")[0] if "/dp/" in product_url else "MANUAL"        
-        print(f"asin: {asin}")
+        asin = product_url.split("/dp/")[1].split("/")[0] if "/dp/" in product_url else "MANUAL"
         bullets = driver.find_elements(By.CSS_SELECTOR, "#feature-bullets ul li span")
-        print(f"bullets: {bullets}")
         specs = " | ".join([b.text.strip() for b in bullets if len(b.text.strip()) > 10][:3])
-        print(f"specs: {specs}")
         try:
             price = driver.find_element(By.CSS_SELECTOR, "span.a-price-whole").text
             price = f"₹{price}"
@@ -336,7 +338,6 @@ def scrape_specific_product(driver, product_url):
 
         img_paths = []
         thumbs = driver.find_elements(By.CSS_SELECTOR, "#altImages img")
-        print(f"thumbs: {thumbs}")
         found = 0
         for idx, img in enumerate(thumbs):
                 if found >= 7: break
@@ -376,8 +377,6 @@ def scrape_specific_product(driver, product_url):
                 except Exception as e:
                     print(f"❌ Download failed: {e}")
         
-        print(f"image count: {len(img_paths)}")
-
         return {
             "asin": asin,
             "name": name,

@@ -429,11 +429,7 @@ def start_daily_routine():
                 driver.quit()
                 continue
             
-            product_count_env = os.getenv("Product_Count")
-            product_count = int(product_count_env) if product_count_env else 1
-            products_found = new_products[:product_count]  
-
-            for i, item in enumerate(products_found):
+            for i, item in enumerate(new_products):
                 print(f"✨ Found new product: {item['name'][:50]}...")
                 asin = item.get('asin')
 
@@ -509,7 +505,9 @@ def start_daily_routine():
                     asin=asin, name=viral_title, product_url=product_url,
                     local_image_path=primary_thumbnail, price=item.get('price', 'Check Price')
                 )
-                
+
+                print("✅ Successfully processed one product. Exiting pool loop.")
+                break                
         finally:
             driver.quit()
             print("🧹 Cleaning up unused product images...")
