@@ -908,7 +908,7 @@ def get_bestsellers(driver, count):
             # --- DOWNLOAD PROCESSOR ---
             found = 0
             for idx, high_res in enumerate(high_res_urls):
-                if found >= 7: break
+                if found >= 5: break
                 
                 # Filter out obvious utility/video files
                 if any(x in high_res.lower() for x in ["video", "play-button", "gif", "icon"]):
