@@ -21,8 +21,8 @@ load_dotenv(ENV_PATH)
 import scout   
 import editor 
 import uploader
-import insta_uploader
-import telegram_poster
+#import insta_uploader
+#import telegram_poster
 import thumbnail_engine 
 
 from selenium import webdriver
