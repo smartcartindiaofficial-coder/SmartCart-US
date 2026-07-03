@@ -123,7 +123,8 @@ def reframe_product_for_youtube(raw_name, raw_specs):
 
     except Exception as e:
         print(f"❌ Groq API Processing Failure: {e}")
-        return raw_name[:45], "Check out this amazing find on Amazon right now!"
+        fallback_script = "Check out this amazing find on Amazon right now! @ Click the link below to view current pricing and specs."
+        return raw_name[:45], fallback_script
 
 def get_crisp_catchy_title(raw_name):
     """

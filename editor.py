@@ -17,7 +17,7 @@ def generate_voiceover(text, output_audio_path):
         "en-US-GuyNeural",         # Conversational US Male
         "en-US-AriaNeural",        # Conversational US Female
         "en-US-ChristopherNeural", # Clear narrative tone
-        "en-US-JennyNeural"        # Bright, popular content creator style
+        "en-US-JennyNeural",        # Bright, popular content creator style
     ]
 
     selected_voice = random.choice(voice_pool)
