@@ -1,4 +1,4 @@
-name: SmartCart India Automation
+name: SmartCart US Automation
 
 on:
   # schedule:
@@ -52,7 +52,7 @@ jobs:
         TOKEN_BASE64: ${{ secrets.YOUTUBE_TOKEN_BASE64 }}
         GITHUB_USERNAME: ${{ secrets.MY_GITHUB_USERNAME }}
       run: |
-        echo "$CLIENT_SECRETS_DATA" > client_secrets.json
+        echo "$CLIENT_SECRETS_DATA" > client_secret_us.json
         # Decodes the safe text string back into a pristine binary token file
         echo "$TOKEN_BASE64" | base64 --decode > token.pickle
         python main.py
