@@ -33,16 +33,34 @@ def generate_voiceover(text, output_audio_path):
     else:
         hook, body = text, ""
 
-    hook = hook.strip()
-    body = body.strip()
+    hook = hook.strip().replace('"', '').replace('\'', '')
+    body = body.strip().replace('"', '').replace('\'', '')
+
+    # Helper function to run async functions safely regardless of loop state
+    def run_async_safe(coro):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        if loop.is_running():
+            # If an event loop is already running in this thread, use a task
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+        else:
+            return loop.run_until_complete(coro)
 
     # Fallback if there is no secondary text body segment
     if not body:
         async def render_single():
             communicate = edge_tts.Communicate(text, selected_voice, rate="-5%")
             await communicate.save(output_audio_path)
-        asyncio.run(render_single())
-        return True
+        try:
+            run_async_safe(render_single())
+            return True
+        except Exception as e:
+            print(f"❌ Single audio generation failed: {e}")
+            return False
 
     # Define paths for the temporary split audio files
     temp_hook_path = output_audio_path.replace(".mp3", "_hook_temp.mp3")
@@ -52,6 +70,8 @@ def generate_voiceover(text, output_audio_path):
         # ⚡ Hook segment: Spoken with higher urgency (+10% speech rate)
         communicate_hook = edge_tts.Communicate(hook, selected_voice, rate="+15%", volume="+50%")
         await communicate_hook.save(temp_hook_path)
+
+        await asyncio.sleep(1.5)
 
         # 🍃 Body segment: Spoken at a normal, smooth narrator pace (-6% speech rate)
         communicate_body = edge_tts.Communicate(body, selected_voice, rate="-6%")

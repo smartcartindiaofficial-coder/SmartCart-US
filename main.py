@@ -383,6 +383,23 @@ def get_uploaded_asins():
     except Exception as e:
         print(f"⚠️ Could not read history: {e}")
         return set()
+    
+def pull_latest_changes():
+    """Attempts to pull the latest changes from the remote repository."""
+    print("Local environment detected. Checking for remote updates...")
+    try:
+        # Runs 'git pull origin main' (adjust branch name if yours is different)
+        result = subprocess.run(
+            ["git", "pull", "origin", "main"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        print("Git Pull Output:\n", result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Error during git pull: {e.stderr}", file=sys.stderr)
+        # Optional: Decide if you want to exit if a merge conflict happens during auto-pull
+        # sys.exit(1)
 
 def start_daily_routine():
     product_found = False
@@ -530,13 +547,23 @@ def run_manual_post(url):
     time.sleep(2)
 
     options = webdriver.ChromeOptions()
-    options.binary_location = BRAVE_PATH
-    options.add_argument(f"--user-data-dir={BRAVE_USER_DATA}")
-    options.add_argument(r'--profile-directory=Default')
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        print("🌐 Cloud Environment Detected: Configuring Headless Chromium...")
+        options.add_argument("--headless=new")
+        options.add_argument('--window-size=1920,1080')
+        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        driver = webdriver.Chrome(options=options)
+    else:
+        print("💻 Local Environment Detected: Testing with standard Google Chrome Instance...")
+        
+        options.add_argument("--remote-debugging-port=9222")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
+        driver = webdriver.Chrome(options=options)
     
     try:
         # 1. Scrape the data
@@ -689,7 +716,13 @@ def run_manual_post(url):
         
 
 if __name__ == "__main__":
+    is_github_pipeline = os.environ.get("GITHUB_ACTIONS") == "true"
+    if not is_github_pipeline:
+        pull_latest_changes()
+    else:
+        print("Running inside GitHub Actions pipeline. Skipping git pull.")
+        
     start_daily_routine()    
     
-    # manual_url = "https://www.amazon.com/dp/B0B8STRJYJ"
+    # manual_url = "https://www.amazon.in/dp/B09XML6PPD"
     # run_manual_post(manual_url)
