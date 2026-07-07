@@ -329,7 +329,8 @@ def sync_landing_page_to_github():
         # Step 2: Stage BOTH index.html and the new locally hosted image assets cleanly
         subprocess.run([git_cmd, "add", "index.html"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
         subprocess.run([git_cmd, "add", "assets/"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
-        
+        subprocess.run([git_cmd, "add", "category_history.json"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
+
         # Step 3: Commit the update
         commit_msg = f"Auto-update deals grid: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         subprocess.run([git_cmd, "commit", "-m", commit_msg], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
@@ -527,6 +528,7 @@ def start_daily_routine():
                 )
 
                 print("✅ Successfully processed one product. Exiting pool loop.")
+                sync_landing_page_to_github()
                 break                
         finally:
             driver.quit()

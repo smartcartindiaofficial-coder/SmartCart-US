@@ -810,9 +810,50 @@ def get_bestsellers(driver, count):
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
     from selenium.webdriver.common.by import By
+    import datetime
+
+    # --- 🔄 DYNAMIC 7-DAY COOLDOWN SELECTION MATRIX ---
+    history_file = os.path.join(SCRIPT_DIR, "category_history.json")
+    category_history = {}
     
-    cat_name, cat_url = random.choice(list(CATEGORIES.items()))
-    print(f"🎲 Randomly selected category: {cat_name}")
+    # Load past category picks
+    if os.path.exists(history_file):
+        try:
+            with open(history_file, "r") as f:
+                category_history = json.load(f)
+        except Exception as e:
+            print(f"⚠️ Could not read category history: {e}")
+
+    now = datetime.datetime.now()
+    available_categories = {}
+
+    # Filter out categories picked less than 7 days ago
+    for name, url in CATEGORIES.items():
+        if name in category_history:
+            last_picked_time = datetime.datetime.fromisoformat(category_history[name])
+            days_passed = (now - last_picked_time).days
+            if days_passed < 4:
+                continue  # Skip this category, it's cooling down
+        available_categories[name] = url
+
+    # Fallback safety: If all categories are on cooldown, reset and use all of them
+    if not available_categories:
+        print("🔄 All categories are currently resting on cooldown! Flushing history matrix...")
+        available_categories = CATEGORIES
+        category_history = {}
+
+    # Pick a random category out of the remaining eligible ones
+    cat_name, cat_url = random.choice(list(available_categories.items()))
+    print(f"🎲 Strategy Pick: {cat_name} (Passed 7-day cooldown clearance)")
+
+    # Record the timestamp for the selected category
+    category_history[cat_name] = now.isoformat()
+    try:
+        with open(history_file, "w") as f:
+            json.dump(category_history, f, indent=4)
+    except Exception as e:
+        print(f"⚠️ Failed to write category tracking file: {e}")
+    # ───────────────────────────────────────────────────
     
     driver.get(cat_url)
     time.sleep(30)
