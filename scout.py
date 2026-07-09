@@ -78,7 +78,6 @@ CATEGORIES = {
     "Apps & Games/Photo & Video":"https://www.amazon.com/Best-Sellers-Apps-Games-Photo-Video/zgbs/mobile-apps/9408874011/ref=zg_bs_nav_mobile-apps_1",
     "Apps & Games/Productivity":"https://www.amazon.com/Best-Sellers-Apps-Games-Productivity/zgbs/mobile-apps/9408449011/ref=zg_bs_nav_mobile-apps_1",
     "Apps & Games/Reference":"https://www.amazon.com/Best-Sellers-Apps-Games-Reference/zgbs/mobile-apps/9408491011/ref=zg_bs_nav_mobile-apps_1",
-    "Apps & Games/Shopping":"https://www.amazon.com/Best-Sellers-Apps-Games-Shopping/zgbs/mobile-apps/9408875011/ref=zg_bs_nav_mobile-apps_1",
     "Apps & Games/Social":"https://www.amazon.com/Best-Sellers-Apps-Games-Social/zgbs/mobile-apps/9408464011/ref=zg_bs_nav_mobile-apps_1",
     "Apps & Games/Sports":"https://www.amazon.com/Best-Sellers-Apps-Games-Sports-Fitness/zgbs/mobile-apps/9408876011/ref=zg_bs_nav_mobile-apps_1",
     "Apps & Games/Transportation":"https://www.amazon.com/Best-Sellers-Apps-Games-Transportation/zgbs/mobile-apps/10298308011/ref=zg_bs_nav_mobile-apps_1",

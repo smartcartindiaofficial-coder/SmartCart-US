@@ -425,12 +425,13 @@ def start_daily_routine():
             options.add_argument("--disable-gpu")
             driver = webdriver.Chrome(options=options)
         else:
-            print("💻 Local Environment Detected: Launching Local Brave Instance...")
-            if BRAVE_PATH:
-                options.binary_location = BRAVE_PATH
-            if BRAVE_USER_DATA:
-                options.add_argument(f"--user-data-dir={BRAVE_USER_DATA}")
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            print("💻 Local Environment Detected: Testing with standard Google Chrome Instance...")
+        
+            options.add_argument("--remote-debugging-port=9222")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            
+            driver = webdriver.Chrome(options=options)
         
         try:
             pool_size_env = os.getenv("pool_size")
