@@ -289,13 +289,12 @@ def compile_landing_page(asin, name, product_url, local_image_path, price, outpu
 def sync_landing_page_to_github():
     """
     Automates staging, committing, and pushing the modified index.html 
-    to GitHub Pages dynamically. Safely handles empty/no-change states 
-    and suppresses Windows CRLF warning stalls.
+    to GitHub Pages dynamically. Safely handles empty/no-change states.
     """
     print("🚀 [GitHub Deployment] Packaging and pushing updated storefront live...")
     
     project_dir = os.path.dirname(os.path.abspath(__file__))
-    git_cmd = "git" 
+    git_cmd = shutil.which("git") or "git" 
     
     possible_git_paths = [
         r"C:\Program Files\Git\cmd\git.exe",
@@ -309,34 +308,33 @@ def sync_landing_page_to_github():
             break
             
     try:
-        # ─── 🛠️ SILENCE WINDOWS LINE-ENDING STALLS ───
-        # Tells Git to automatically convert line endings silently without pausing for input
-        subprocess.run([git_cmd, "config", "core.autocrlf", "true"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
-        # ──────────────────────────────────────────────
+        # ─── 🛠️ CONFIG IDENTITY FOR AUTOMATED ENVIRONMENTS ───
+        # Ensures commits don't fail in headless cloud environments
+        subprocess.run([git_cmd, "config", "user.name", "Automated Deployer"], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
+        subprocess.run([git_cmd, "config", "user.email", "actions@github.com"], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
+        subprocess.run([git_cmd, "config", "core.autocrlf", "true"], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
 
-        # Step 1: Check if index.html actually has modifications compared to the repository
-        status_check = subprocess.run([git_cmd, "status", "--porcelain", "index.html"], 
-                                      capture_output=True, text=True, shell=True, cwd=project_dir)
+        # Step 1: Check modifications for all tracked assets individually
+        status_html = subprocess.run([git_cmd, "status", "--porcelain", "index.html"], capture_output=True, text=True, shell=False, cwd=project_dir)
+        status_assets = subprocess.run([git_cmd, "status", "--porcelain", "assets/"], capture_output=True, text=True, shell=False, cwd=project_dir)
+        status_history = subprocess.run([git_cmd, "status", "--porcelain", "category_history.json"], capture_output=True, text=True, shell=False, cwd=project_dir)
         
-        # Also check if there are newly added images untracked in assets/
-        assets_check = subprocess.run([git_cmd, "status", "--porcelain", "assets/"], 
-                                      capture_output=True, text=True, shell=True, cwd=project_dir)
-        
-        if not status_check.stdout.strip() and not assets_check.stdout.strip():
+        # If nothing has changed across all three locations, skip exit early
+        if not (status_html.stdout.strip() or status_assets.stdout.strip() or status_history.stdout.strip()):
             print("ℹ️ [GitHub Deployment] Storefront assets have no new modifications. Skipping deployment sync.")
             return True
 
-        # Step 2: Stage BOTH index.html and the new locally hosted image assets cleanly
-        subprocess.run([git_cmd, "add", "index.html"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
-        subprocess.run([git_cmd, "add", "assets/"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
-        subprocess.run([git_cmd, "add", "category_history.json"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
-
+        # Step 2: Stage files cleanly without shell wraps
+        subprocess.run([git_cmd, "add", "index.html"], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
+        subprocess.run([git_cmd, "add", "assets/"], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
+        subprocess.run([git_cmd, "add", "category_history.json"], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
+        
         # Step 3: Commit the update
         commit_msg = f"Auto-update deals grid: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        subprocess.run([git_cmd, "commit", "-m", commit_msg], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
+        subprocess.run([git_cmd, "commit", "-m", commit_msg], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
         
         # Step 4: Push live to GitHub
-        subprocess.run([git_cmd, "push"], check=True, capture_output=True, shell=True, text=True, cwd=project_dir)
+        subprocess.run([git_cmd, "push"], check=True, capture_output=True, shell=False, text=True, cwd=project_dir)
         print("✅ [GitHub Deployment] Storefront successfully deployed globally!")
         return True
         
