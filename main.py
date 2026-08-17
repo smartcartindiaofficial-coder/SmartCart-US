@@ -97,9 +97,9 @@ def reframe_product_for_youtube(raw_name, raw_specs):
                     "content": prompt,
                 }
             ],
-            model="llama-3.1-8b-instant",  # <--- Changed from llama3-8b-8092
+            model="openai/gpt-oss-20b",  # <--- Changed from llama3-8b-8092
             temperature=0.7,
-            max_tokens=250
+            max_tokens=1000
         )
 
         # Parse and clean the output response text
