@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import asyncio
 import edge_tts
+import nest_asyncio
 
 try:
     # Try importing using the newer MoviePy v2.x structure
@@ -523,16 +524,12 @@ def create_pro_video(image_paths, product_name, output_path, voice_text=None):
 
         final_output_clip.write_videofile(
             output_path,
-            fps=24,
+            fps=30,
             codec='libx264',
             audio_codec='aac',
             bitrate="5000k",
             audio_bitrate="128k",
-            ffmpeg_params=[
-                '-pix_fmt', 'yuv420p',
-                '-profile:v', 'high',
-                '-level', '4.0'
-            ],
+            ffmpeg_params=["-movflags", "+faststart"],
             logger=None,
             write_logfile=False
         )

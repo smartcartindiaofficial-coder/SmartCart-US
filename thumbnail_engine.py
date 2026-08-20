@@ -348,7 +348,7 @@ def draw_gradient_text_block_with_3d_shadow(bg_canvas, text, position, font_path
     text_filled_layer.paste(gradient_brush, (0, 0), mask=mask_layer)
     bg_canvas.alpha_composite(text_filled_layer)
 
-def generate_thumbnail_multi(asin, product_name, specifications, image_paths_list):
+def generate_thumbnail_multi(asin, product_name, specifications, image_paths_list, offer_percentage):
     output_filename = f"tn_{asin}.jpg"
     output_path = os.path.join(SCRIPT_DIR, output_filename)
     
@@ -358,7 +358,8 @@ def generate_thumbnail_multi(asin, product_name, specifications, image_paths_lis
         return None
 
     primary_img_path = valid_images[0]
-    print(f"🚀 [Studio Engine] Compiling 3D Overlay Layout for ASIN: {asin}")
+    logging_offer = f"{offer_percentage}% OFF" if offer_percentage > 0 else "NO OFFER"
+    print(f"🚀 [Studio Engine] Compiling ASIN: {asin} ({logging_offer})")
 
     try:
         # ─── PHASE 1: BACKGROUND REMOVAL & CROP ───
@@ -453,6 +454,22 @@ def generate_thumbnail_multi(asin, product_name, specifications, image_paths_lis
         bg_canvas.alpha_composite(shadow_blurred, (pos_x - shadow_blur, pos_y - shadow_blur))
         bg_canvas.alpha_composite(product_resized, (pos_x, pos_y))
 
+		# ─── INTEGRATION: DRAW THE DYNAMIC PRIORITY BADGE last ───
+        # This modular function is added at the end of the script definition below.
+        # It guarantees the offer is the highest layer in the composition.
+        
+        if offer_percentage > 0:
+            print(f"    [Offer] Invoking Foreground Badge Priority: {offer_percentage}% OFF")
+            
+            # Anchor to lower right for YouTube Shorts/Reels safely.
+            # We must call the modular function defined below.
+            draw_foreground_offer_badge(
+                bg_canvas=bg_canvas,
+                offer_percentage=offer_percentage,
+                anchor_corner="bottom-right"
+            )
+        # ─────────────────────────────────────────────────────────
+
         # Output conversion
         final_thumbnail = bg_canvas.convert("RGB")
         final_thumbnail.save(output_path, "JPEG", quality=95)
@@ -463,12 +480,102 @@ def generate_thumbnail_multi(asin, product_name, specifications, image_paths_lis
         print(f"❌ Dynamic Engine Failed: {e}")
         return None
 
+def draw_foreground_offer_badge(bg_canvas, offer_percentage, anchor_corner="bottom-right"):
+    """
+    Modular function to draw a dynamic starburst badge 
+    with dynamic integer text in a contrasting fixed palette.
+    """
+    canvas_w, canvas_h = bg_canvas.size
+    draw = ImageDraw.Draw(bg_canvas)
+    
+    # 1. Choose contrating colors that bypass theme logic
+    # Fixed Red/Gold Starburst
+    burst_base_color = (192, 0, 0, 255) # Clear Red
+    burst_border_color = (255, 153, 0, 255) # Saturated Gold
+    text_color = (255, 255, 255, 255) # Pure White text
+    shadow_color = (0, 0, 10, 245) # Deep navy shadow
+
+    # 2. Position constraints and asset generation
+    # Create the text asset: "65% OFF" or "SAVE 50%"
+    # Minimal text text: "65%"
+    offer_text = f"{offer_percentage}% \n OFF"
+    
+    # Use a consistently bold, Impact-style font (Bebas or Montserrat Black is good)
+    # Be minimal: Reuse the existing Bebas font which is bold.
+    font_path = download_and_get_fonts("IMPACT_BEBAS")
+    
+    # Dynamic text scaling for badge
+    current_size = 180
+    while current_size >= 120:
+        font = safe_load_font(font_path, current_size)
+        bbox = font.getbbox(offer_text)
+        text_w = bbox[2] - bbox[0]
+        if text_w <= 360: # Max text width in starburst region
+            break
+        current_size -= 8
+    
+    # Text height logic remains unchanged
+    
+    # 3. Geometric Starburst logic (PIL specific):
+    # PIL draw.polygon needs center coordinates, a base radius, and an outer/spike radius.
+    burst_points = 24
+    
+    # A badge size optimized for Shorts: 450px region.
+    burst_inner_radius = 210
+    burst_outer_radius = 250
+    # Add Gold Border (minimal change)
+    burst_inner_radius_outer_ring = burst_outer_radius + 15
+    burst_outer_radius_outer_ring = burst_inner_radius_outer_ring + 2
+    
+    # Anchor coordinates in the corner (bottom-right)
+    center_x = canvas_w - 160
+    center_y = canvas_h - 160
+    
+    # Generate starburst polygon points
+    def generate_starburst_points(cx, cy, inner, outer, points):
+        star_coords = []
+        angle_step = (2 * math.pi) / (points * 2)
+        for i in range(points * 2):
+            angle = i * angle_step
+            # Alternating between inner and outer radius creates the points
+            rad = outer if i % 2 == 0 else inner
+            x = cx + rad * math.cos(angle - math.pi/2)
+            y = cy + rad * math.sin(angle - math.pi/2)
+            star_coords.append((x, y))
+        return star_coords
+
+    # Draw Gold Border first (minimal change)
+    # g_burst = generate_starburst_points(center_x, center_y, burst_inner_radius_outer_ring, burst_outer_radius_outer_ring, burst_points)
+    # draw.polygon(g_burst, fill=burst_border_color)
+
+    # Minimal logic draw simple Contrasting Burst
+    burst = generate_starburst_points(center_x, center_y, burst_inner_radius, burst_outer_radius, burst_points)
+    draw.polygon(burst, fill=burst_base_color)
+    
+    # 4. Add dynamic text inside the contrasting geometric burst
+    bbox = font.getbbox(offer_text)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    
+    # Center text in starburst region
+    text_x = center_x - (text_w // 4)
+    # Vertical centering tweak for Impact font desceders
+    text_y = center_y - (text_h // 0.7) - (current_size // 15)
+
+    # Heavy Shadow for priority punch (contrasting fixed palette)
+    # off_x, off_y = (15, 18)
+    # draw.text((text_x + off_x, text_y + off_y), offer_text, fill=shadow_color, font=font)
+    
+    # Draw priority white text
+    draw.text((text_x, text_y), offer_text, fill=text_color, font=font)
+
 if __name__ == "__main__":
     # IMPORTANT: Ensure 'bottle_test.jpg' is a clean original product image file asset, 
     # not a previously processed thumbnail containing background frames!
     generate_thumbnail_multi(
-        asin="B0FGVCXB92", 
-        product_name="Personalized Name Charm Leather Wallet", 
+        asin="B0FVX789CR", 
+        product_name="Zoom In, Not Out", 
         specifications=[], 
-        image_paths_list=[os.path.join(SCRIPT_DIR, "test.jpg")]
+        image_paths_list=[os.path.join(SCRIPT_DIR, "test.jpg"),],
+        offer_percentage=68
     )

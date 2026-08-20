@@ -15,3 +15,5 @@ requests
 pyTelegramBotAPI
 google-api-python-client
 google-auth-oauthlib
+nest_asyncio
+supabase

@@ -6,7 +6,14 @@ on:
   #   - cron: '18 3 * * *'   # ~8:48 AM IST (Morning Run)
   #   - cron: '23 8 * * *'   # ~1:53 PM IST (Afternoon Run)
   #   - cron: '12 14 * * *'  # ~7:42 PM IST (Evening Run)
+  push:
+    paths:
+      - 'manual_urls.txt'
+
   workflow_dispatch:      # This allows you to click a button on GitHub to test it manually anytime!
+
+permissions:
+  contents: write
 
 jobs:
   run-smartcart-pipeline:
@@ -16,6 +23,8 @@ jobs:
     # 1. Fetch your code files from your repository onto the cloud machine
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     # 2. Setup a standard stable Python runtime environment
     - name: Set up Python
@@ -51,18 +60,56 @@ jobs:
         CLIENT_SECRETS_DATA: ${{ secrets.CLIENT_SECRETS_JSON }}
         TOKEN_BASE64: ${{ secrets.YOUTUBE_TOKEN_BASE64 }}
         GITHUB_USERNAME: ${{ secrets.MY_GITHUB_USERNAME }}
+        Superbase_Secret_Key: ${{ secrets.Superbase_Secret_Key }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       run: |
         echo "$CLIENT_SECRETS_DATA" > client_secret_us.json
         # Decodes the safe text string back into a pristine binary token file
         echo "$TOKEN_BASE64" | base64 --decode > token.pickle
         python main.py
 
+    # 6. Cleanup Assets older than 180 days
+    - name: Clean Old Assets (180+ days)
+      run: |
+        if [ -d "assets" ]; then
+          CUTOFF=$(date -d '180 days ago' +%s)
+          
+          find assets -type f | while read -r file; do
+            LAST_COMMIT=$(git log -1 --format="%ct" -- "$file")
+            
+            if [ -n "$LAST_COMMIT" ] && [ "$LAST_COMMIT" -lt "$CUTOFF" ]; then
+              echo "Removing old asset: $file"
+              git rm -f "$file" || rm -f "$file"
+            fi
+          done
+        fi
+    
+    # 7. Cleanup Exports older than 7 days & delete empty date folders
+    - name: Clean Old Exports (7+ days)
+      run: |
+        if [ -d "Exports" ]; then
+          CUTOFF_EXPORTS=$(date -d '7 days ago' +%s)
+          
+          # Remove files older than 7 days
+          find Exports -type f | while read -r file; do
+            LAST_COMMIT=$(git log -1 --format="%ct" -- "$file")
+            
+            if [ -n "$LAST_COMMIT" ] && [ "$LAST_COMMIT" -lt "$CUTOFF_EXPORTS" ]; then
+              echo "Removing old export file: $file"
+              git rm -f "$file" || rm -f "$file"
+            fi
+          done
+          
+          # Bottom-up search to remove any empty subfolders left behind (DD, Month, YYYY)
+          find Exports -mindepth 1 -depth -type d -empty -delete
+        fi
+    
     # 6. Capture changes to upload_history.csv and index.html, then commit back to repo
     - name: Commit and Save Logs & Frontend Progress
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Automation Bot"
-        git add upload_history.csv index.html assets/ Exports/ category_history.json
+        git add upload_history.csv category_history.json index.html assets/ Exports/ manual_urls.txt
         # The || true prevents the script from crashing if there are no new deals to save
         git diff-index --quiet HEAD || git commit -m "Automated Sync: History & Deals Updated [skip ci]" || true
         git push

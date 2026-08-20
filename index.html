@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Best Daily Deals - SmartCart US 🔥</title>
+    <title>🔥 Best Daily Deals - SmartCart USA 🔥</title>
     <style>
         :root { --bg: #0d0d11; --card-bg: #16161f; --text: #f3f4f6; --accent: #ff9900; --border: #262636; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,21 +19,76 @@
         .header-panel { text-align: center; margin: 25px 0; max-width: 480px; width: 100%; }
         .header-panel h1 { font-size: 1.5rem; color: var(--text); margin-bottom: 5px; }
         .header-panel p { font-size: 0.9rem; color: #8b8ba7; }
-        .deals-container { max-width: 480px; width: 100%; display: flex; flex-direction: column; gap: 15px; }
-        .deal-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; display: flex; padding: 12px; gap: 12px; align-items: center; transition: transform 0.2s; }
-        .deal-card:hover { transform: scale(1.01); border-color: var(--accent); }
-        .deal-thumb { width: 85px; height: 85px; object-fit: contain; background: #fff; border-radius: 8px; padding: 4px; flex-shrink: 0; }
-        .deal-details { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-width: 0; }
-        .deal-title { font-size: 0.95rem; font-weight: 600; color: #e5e7eb; line-height: 1.3; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ─── CONVERTER SECTION STYLES ─── */
+        .converter-container { max-width: 480px; width: 100%; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .converter-title { font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 2px; }
+        .input-group { display: flex; gap: 8px; }
+        .url-input { flex-grow: 1; background: #0d0d11; border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: var(--text); font-size: 0.9rem; outline: none; }
+        .url-input:focus { border-color: var(--accent); }
+        .convert-btn { background: var(--accent); color: #000; border: none; font-size: 0.9rem; font-weight: 700; padding: 10px 16px; border-radius: 6px; cursor: pointer; transition: opacity 0.2s; }
+        .convert-btn:hover { opacity: 0.9; }
+        
+        /* Result Box Styles */
+        .result-container { display: none; background: rgba(255, 153, 0, 0.05); border: 1px dashed var(--accent); border-radius: 8px; padding: 12px; margin-top: 5px; text-align: center; }
+        .result-link-btn { display: inline-block; background: var(--accent); color: #000; text-decoration: none; font-size: 0.9rem; font-weight: 700; padding: 10px 20px; border-radius: 6px; transition: opacity 0.2s; width: 100%; text-align: center; }
+        .result-link-btn:hover { opacity: 0.9; }
+
+        .deals-container {max-width: 500px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 10px; }  
+        .deal-card { background: var(--card-bg, #1e293b); border: 5px solid var(--border, #334155); border-radius: 14px; display: flex; flex-direction: column; padding: 10px; gap: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); transition: transform 0.2s ease; }  
+        .deal-card:hover { transform: translateY(-3px); }  
+        .deal-thumb { width: 100%; height: 150px; object-fit: contain; padding: 6px; background: #ffffff; border-radius: 8px; }
+        .deal-details { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }  
+        .deal-title { font-size: 0.85rem; font-weight: 600; line-height: 1.3; color: var(--text, #ffffff); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }  
+        .deal-btn { background: var(--accent, #5b21b6);  color: #ffffff; text-decoration: none; font-size: 0.8rem; font-weight: 700; padding: 9px 0; border-radius: 8px; text-align: center; width: 100%; display: block; }
+        
         .deal-meta { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .deal-price { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
-        .deal-btn { background: var(--accent); color: #000; text-decoration: none; font-size: 0.85rem; font-weight: 700; padding: 8px 14px; border-radius: 6px; transition: opacity 0.2s; }
         .deal-btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
+    <script>
+        const AFFILIATE_TAG = 'smartcart0fd-20';
+
+        function processUrl() {
+            const rawUrlInput = document.getElementById('raw-url').value.trim();
+            const resultBox = document.getElementById('result-box');
+            const dealButton = document.getElementById('affiliate-deal-btn');
+            
+            if (!rawUrlInput) {
+                alert("Please enter a valid Amazon URL!");
+                return;
+            }
+
+            let finalUrl = "";
+            const asinRegex = /\/([A-Z0-9]{10})(?:[\/?]|$)/i;
+            const match = rawUrlInput.match(asinRegex);
+
+            if (match && match[1]) {
+                const asin = match[1];
+                finalUrl = `https://www.amazon.com/dp/${asin}?tag=${AFFILIATE_TAG}`;
+            } else {
+                try {
+                    let urlObj = new URL(rawUrlInput);
+                    urlObj.searchParams.set('tag', AFFILIATE_TAG);
+                    finalUrl = urlObj.toString();
+                } catch (e) {
+                    const separator = rawUrlInput.includes('?') ? '&' : '?';
+                    finalUrl = `${rawUrlInput}${separator}tag=${AFFILIATE_TAG}`;
+                }
+            }
+
+            // Bind the final native URL directly to the anchor href attribute
+            dealButton.href = finalUrl;
+            
+            // Show the result container element
+            resultBox.style.display = "block";
+        }
+    </script>
+
     <div class="header-panel">
-        <h1>🔥Best Daily Deals - SmartCart US🔥</h1>
+        <h1>🔥Best Daily Deals - SmartCart USA🔥</h1>
         <p>Handpicked Premium Tech & Lifestyle Amazon Finds</p>
         
         <div class="social-links-container">
@@ -48,6 +103,21 @@
             </a> -->
         </div>
     </div>
+
+    <!-- ─── CONVERTER BOX ─── -->
+    <div class="converter-container">
+        <div class="converter-title">Convert Amazon URL to Affiliate</div>
+        <div class="input-group">
+            <input type="text" id="raw-url" class="url-input" placeholder="Paste Amazon Link (Long or Short)...">
+            <button class="convert-btn" onclick="processUrl()">Convert</button>
+        </div>
+        
+        <!-- Generated HTML Anchor Element instead of a JavaScript trigger button -->
+        <div id="result-box" class="result-container">
+            <a id="affiliate-deal-btn" class="result-link-btn" href="#" target="_blank">Buy on Amazon</a>
+        </div>
+    </div>
+
     <div class="deals-container" id="deals-wrapper">
 
         <div class="deal-card" id="card-B00VV5KRD8">
@@ -140,7 +210,7 @@
                 <h3 class="deal-title">Portable DVD Power‑Up...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07V67STBD?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07V67STBD?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -152,7 +222,7 @@
                 <h3 class="deal-title">2 Pack Blue Party Decorations Ocean Party Dec...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BWRJF5DX?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BWRJF5DX?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -164,7 +234,7 @@
                 <h3 class="deal-title">HiLIFE Steamer for Clothes, Portable Handheld...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07HF3X6Y4?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07HF3X6Y4?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -176,7 +246,7 @@
                 <h3 class="deal-title">Locks Love Spray...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07GX1JKNB?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07GX1JKNB?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -188,7 +258,7 @@
                 <h3 class="deal-title">Sip. Savor. Repeat....</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FV2CHLV8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FV2CHLV8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -200,7 +270,7 @@
                 <h3 class="deal-title">Wine Bag Surprise for Loved Ones...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D9NSPBC3?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D9NSPBC3?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -212,7 +282,7 @@
                 <h3 class="deal-title">See More, Worry Less...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F3BJJ9DJ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F3BJJ9DJ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -224,7 +294,7 @@
                 <h3 class="deal-title">1. Case Goals...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FM2NP46M?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FM2NP46M?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -236,7 +306,7 @@
                 <h3 class="deal-title">1. Protect Your Perfect Shot Every Time...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0822MPCFD?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0822MPCFD?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -248,7 +318,7 @@
                 <h3 class="deal-title">Chill on the Go in Style...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07CTXRKH8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07CTXRKH8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -260,7 +330,7 @@
                 <h3 class="deal-title">Roku Remote Made Easy...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CQF6T2K1?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CQF6T2K1?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -272,7 +342,7 @@
                 <h3 class="deal-title">UNO Chaos at Your Fingertips...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07P6MZPK3?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07P6MZPK3?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -284,7 +354,7 @@
                 <h3 class="deal-title">Retro Gaming Fun for Kids...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DJ5RPZY2?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DJ5RPZY2?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -296,7 +366,7 @@
                 <h3 class="deal-title">Eye Care Without Compromise...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GLQXKKVY?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GLQXKKVY?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -308,7 +378,7 @@
                 <h3 class="deal-title">Baby's First Ball is the Best...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00ZRD99C0?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00ZRD99C0?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -320,7 +390,7 @@
                 <h3 class="deal-title">Easy Cooking, Endless Possibilities...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CKYWT36R?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CKYWT36R?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -332,7 +402,7 @@
                 <h3 class="deal-title">Rain Symphony for Your Garden...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D9QJNPJ3?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D9QJNPJ3?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -344,7 +414,7 @@
                 <h3 class="deal-title">Unleash The Magic Of Disney Friends...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07YQP4CST?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07YQP4CST?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -356,7 +426,7 @@
                 <h3 class="deal-title">Unbeatable Tablet for Every Budget...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B083C567C3?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B083C567C3?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -368,7 +438,7 @@
                 <h3 class="deal-title">Laptop Life Just Got Easier...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07PBD5RDG?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07PBD5RDG?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -380,7 +450,7 @@
                 <h3 class="deal-title">Spiderman Backpack for School Kids...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0B4KMZRC3?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0B4KMZRC3?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -392,7 +462,7 @@
                 <h3 class="deal-title">Home Security Made Crystal Clear...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DXM9Y8J1?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DXM9Y8J1?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -404,7 +474,7 @@
                 <h3 class="deal-title">Here's the transformed content:...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0007QCQGI?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0007QCQGI?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -416,7 +486,7 @@
                 <h3 class="deal-title">Capture Life's Precious Moments...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GDQRNTF3?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GDQRNTF3?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -428,7 +498,7 @@
                 <h3 class="deal-title">Ultimate Sip Every Time...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DF472VMZ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DF472VMZ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -440,7 +510,7 @@
                 <h3 class="deal-title">Deck Up Your Game Night...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00E4AMFKK?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00E4AMFKK?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -452,7 +522,7 @@
                 <h3 class="deal-title">Unlock Hidden Worlds...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CJRTRRTG?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CJRTRRTG?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -464,7 +534,7 @@
                 <h3 class="deal-title">Capture Life's Moments in Stunning Clarity...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CG19QXWD?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CG19QXWD?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -476,7 +546,7 @@
                 <h3 class="deal-title">Fish Smarter, Not Harder...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B017NI17HQ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B017NI17HQ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -488,7 +558,7 @@
                 <h3 class="deal-title">Freedom in Your Ears...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DGHMNQ5Z?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DGHMNQ5Z?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -500,7 +570,7 @@
                 <h3 class="deal-title">Pink Backdrop Magic Unleashed...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DLN1B4MJ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DLN1B4MJ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -512,7 +582,7 @@
                 <h3 class="deal-title">Cozy Up Without the Guilt...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00JUM36R8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00JUM36R8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -524,7 +594,7 @@
                 <h3 class="deal-title">Tune Up Your Sound Fast...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00MO6KKSK?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00MO6KKSK?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -536,7 +606,7 @@
                 <h3 class="deal-title">Bible Verses for a Calmer Life...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D3LM83KH?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D3LM83KH?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -548,7 +618,7 @@
                 <h3 class="deal-title">Bring Back Your Childhood Pet...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FGGMR4JZ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FGGMR4JZ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -560,7 +630,7 @@
                 <h3 class="deal-title">Tiny USB, Big Storage Boost...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DH1MKVQV?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DH1MKVQV?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -572,7 +642,7 @@
                 <h3 class="deal-title">Singing KPop Doll Takes the Stage...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GCC4HQRP?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GCC4HQRP?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -584,7 +654,7 @@
                 <h3 class="deal-title">Sweat Smarter Not Harder...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0785VXRX2?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0785VXRX2?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -596,7 +666,7 @@
                 <h3 class="deal-title">Make Your Memories Pop...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DH3YYC5F?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DH3YYC5F?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -608,7 +678,7 @@
                 <h3 class="deal-title">See What Happens Behind You...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D6J5B98H?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D6J5B98H?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -620,7 +690,7 @@
                 <h3 class="deal-title">Elevate Your Bartending Game Instantly...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B09ZKRXT8M?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B09ZKRXT8M?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -632,7 +702,7 @@
                 <h3 class="deal-title">Unleash Little Minds...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00NHQF6MG?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00NHQF6MG?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -644,7 +714,7 @@
                 <h3 class="deal-title">Unleash Mario Kart Chaos Anywhere...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B01CEY489S?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B01CEY489S?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -656,7 +726,7 @@
                 <h3 class="deal-title">Unleash Your Drink, Sip Your Way...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DR9GN2PM?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DR9GN2PM?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -668,7 +738,7 @@
                 <h3 class="deal-title">Strings That Rock Your World...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0002M6CVC?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0002M6CVC?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -680,7 +750,7 @@
                 <h3 class="deal-title">Retro Magic in Every Snap...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FFGDGNQV?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FFGDGNQV?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -692,7 +762,7 @@
                 <h3 class="deal-title">Fastest Charging Cables Ever!...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B088NRLMPV?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B088NRLMPV?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -704,7 +774,7 @@
                 <h3 class="deal-title">Magical Fairy Lights Transform Spaces...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07WG18RLT?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07WG18RLT?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -716,7 +786,7 @@
                 <h3 class="deal-title">Cuddle Buddy Alert: 8 Ginger Cat Plush...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B083FM3R87?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B083FM3R87?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -728,7 +798,7 @@
                 <h3 class="deal-title">Softest Sheets You'll Ever Sleep On...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00Q7OAPM6?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00Q7OAPM6?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -740,7 +810,7 @@
                 <h3 class="deal-title">Ultra-Fast Home WiFi Revolution...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DVBP5L6Y?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DVBP5L6Y?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -752,7 +822,7 @@
                 <h3 class="deal-title">1. See Everything in Stunning Detail...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHJ7TKZM?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHJ7TKZM?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -764,7 +834,7 @@
                 <h3 class="deal-title">Soft Lips, Happy Life Begins...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CLHTKY3V?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CLHTKY3V?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -776,7 +846,7 @@
                 <h3 class="deal-title">Wireless Gaming Evolution...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DT52LVMS?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DT52LVMS?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -788,7 +858,7 @@
                 <h3 class="deal-title">Wine Leftovers Don't Suck Anymore...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B005N0WCE4?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B005N0WCE4?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -800,7 +870,7 @@
                 <h3 class="deal-title">Make Your Own Puppets Party...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B081L8933P?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B081L8933P?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -812,7 +882,7 @@
                 <h3 class="deal-title">SQUISHY SQUEEZE Stress Relief Therapy...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DTJWSVWG?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DTJWSVWG?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -824,7 +894,7 @@
                 <h3 class="deal-title">Game-Changing Kettle for Busy Lives...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0C5Z8VCHX?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0C5Z8VCHX?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -836,7 +906,7 @@
                 <h3 class="deal-title">Safe Dryer Vent Hack...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DRRYM7GL?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DRRYM7GL?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -848,7 +918,7 @@
                 <h3 class="deal-title">Barefoot Freedom for Every Adventure...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B09Q3MYDQH?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B09Q3MYDQH?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -860,7 +930,7 @@
                 <h3 class="deal-title">Sparkle on Her 80th Birthday...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0G4LPHP5R?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0G4LPHP5R?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -872,7 +942,7 @@
                 <h3 class="deal-title">Softest Kitchen Towels Ever Discovered...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07WMQP4SF?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07WMQP4SF?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -884,7 +954,7 @@
                 <h3 class="deal-title">Big Screen Anywhere...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F7RR3YC6?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F7RR3YC6?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -896,7 +966,7 @@
                 <h3 class="deal-title">Squish Stress Away...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F6Y5C3ZS?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F6Y5C3ZS?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -908,7 +978,7 @@
                 <h3 class="deal-title">Turbo Speed RC Fun For Kids...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CTWHSSM8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CTWHSSM8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -920,7 +990,7 @@
                 <h3 class="deal-title">1. Draw, Discover, Dominate...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DZ75TN5F?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DZ75TN5F?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -932,7 +1002,7 @@
                 <h3 class="deal-title">Colorful Straws for Every Party...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D6T59JGQ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D6T59JGQ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -944,7 +1014,7 @@
                 <h3 class="deal-title">Capture Life's Magic in Full HD...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B08K7HFMX4?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B08K7HFMX4?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -956,7 +1026,7 @@
                 <h3 class="deal-title">Sing Your Heart Out Mini Karaoke...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CHS2VNHC?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CHS2VNHC?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -968,7 +1038,7 @@
                 <h3 class="deal-title">Whipped Beef Tallow Magic...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BJMSH4JX?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BJMSH4JX?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -980,7 +1050,7 @@
                 <h3 class="deal-title">Baby Surprise Unboxing Madness...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GCHBYQGC?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GCHBYQGC?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -992,7 +1062,7 @@
                 <h3 class="deal-title">Instant Tire Fix Anywhere...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CS3B7MD8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CS3B7MD8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1004,7 +1074,7 @@
                 <h3 class="deal-title">Heal in a Snap...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0014CV2IW?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0014CV2IW?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1016,7 +1086,7 @@
                 <h3 class="deal-title">Portable Storage Made Easy...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07CRG94G3?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07CRG94G3?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1028,7 +1098,7 @@
                 <h3 class="deal-title">Dry Clothes Anywhere Instantly...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0C2GPVLHS?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0C2GPVLHS?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1040,7 +1110,7 @@
                 <h3 class="deal-title">Healing in an Instant...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00B6A6XOK?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00B6A6XOK?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1052,7 +1122,7 @@
                 <h3 class="deal-title">Jessie's Ready for Adventure...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FDH3BLH2?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FDH3BLH2?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1064,7 +1134,7 @@
                 <h3 class="deal-title">Spot Anything Far Away...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0756BXDTX?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0756BXDTX?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1076,7 +1146,7 @@
                 <h3 class="deal-title">Luxury Sleep for the Win...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07F97MPYT?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07F97MPYT?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1088,7 +1158,7 @@
                 <h3 class="deal-title">Stylish Safety for Your Pup...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHQ8BHFJ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHQ8BHFJ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1100,7 +1170,7 @@
                 <h3 class="deal-title">Protect Your Tabletop in Style...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CG9NWJYZ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CG9NWJYZ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1112,7 +1182,7 @@
                 <h3 class="deal-title">Unbeatable PC Upgrade for Busy Lives...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B089QV23YJ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B089QV23YJ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1124,7 +1194,7 @@
                 <h3 class="deal-title">Unbreakable Fishing Line for Wild Adventures...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B01N1HEY0M?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B01N1HEY0M?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1136,7 +1206,7 @@
                 <h3 class="deal-title">The Ultimate Laptop for School Success...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GR6FHGXX?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GR6FHGXX?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1148,7 +1218,7 @@
                 <h3 class="deal-title">Fastest Home WiFi Ever Built...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B08H8ZLKKK?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B08H8ZLKKK?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1160,7 +1230,7 @@
                 <h3 class="deal-title">Dry Home, Less Stress...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BPMB1Y13?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BPMB1Y13?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1172,7 +1242,7 @@
                 <h3 class="deal-title">Capture Life's Most Stunning Moments...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CG19FGQ5?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CG19FGQ5?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1184,7 +1254,7 @@
                 <h3 class="deal-title">Colorful Water Blasters For Summer Fun...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0796JVBJ8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0796JVBJ8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1196,7 +1266,7 @@
                 <h3 class="deal-title">Smooth Wrinkles in One Shot...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D3DZQ1ZM?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D3DZQ1ZM?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1208,7 +1278,7 @@
                 <h3 class="deal-title">Upgrade Your Gaming Experience...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B08M9HND4F?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B08M9HND4F?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1220,7 +1290,7 @@
                 <h3 class="deal-title">Upgrade Your Entertainment Experience...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0H4QPKD72?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0H4QPKD72?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1232,7 +1302,7 @@
                 <h3 class="deal-title">Kitchen Game Changer Oven...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0H2DFHVLK?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0H2DFHVLK?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1244,7 +1314,7 @@
                 <h3 class="deal-title">Upgrade Your Boat Party...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B072C42X3H?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B072C42X3H?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1256,7 +1326,7 @@
                 <h3 class="deal-title">Safe Home from Anywhere...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0866S3D82?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0866S3D82?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1268,7 +1338,7 @@
                 <h3 class="deal-title">Life-Changing Upgrade, Now Yours...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GK4TPQDG?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GK4TPQDG?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1280,7 +1350,7 @@
                 <h3 class="deal-title">Brew, Sip, Repeat with Ease...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0C8J7218N?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0C8J7218N?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1292,7 +1362,7 @@
                 <h3 class="deal-title">Potty Training Just Got Easier...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00MW8G62E?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00MW8G62E?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1304,7 +1374,7 @@
                 <h3 class="deal-title">Here's the transformed content:...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CNFCRJ77?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CNFCRJ77?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1316,7 +1386,7 @@
                 <h3 class="deal-title">Level Up Your Collection...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DFJ8HHDM?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DFJ8HHDM?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1328,7 +1398,7 @@
                 <h3 class="deal-title">Life Just Got Easier Tonight...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FXHSDQ57?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FXHSDQ57?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1340,7 +1410,7 @@
                 <h3 class="deal-title">Eco-Friendly Twine Revolution...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BCK98LLG?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BCK98LLG?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1352,7 +1422,7 @@
                 <h3 class="deal-title">Accurate Dose Made Easy...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DKHC3GGJ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DKHC3GGJ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1364,7 +1434,7 @@
                 <h3 class="deal-title">Duck Pin Frenzy Mystery Pack...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GWNP2MVP?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GWNP2MVP?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1376,7 +1446,7 @@
                 <h3 class="deal-title">Rugged Everyday Tee for Life...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B01BXGKIJM?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B01BXGKIJM?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1388,7 +1458,7 @@
                 <h3 class="deal-title">Beef Jerky Game Changer...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B015SQAVB8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B015SQAVB8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1400,7 +1470,7 @@
                 <h3 class="deal-title">Summer Vibes Unleashed...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GF9XWXGH?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GF9XWXGH?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1412,7 +1482,7 @@
                 <h3 class="deal-title">Snack Attack Solved in Minutes...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B08826B2XL?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B08826B2XL?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1424,7 +1494,7 @@
                 <h3 class="deal-title">Music Magic for Little Minds...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07MPCCDM7?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07MPCCDM7?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1436,7 +1506,7 @@
                 <h3 class="deal-title">Instant New PC Setup...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07QHLRL1H?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07QHLRL1H?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1448,7 +1518,7 @@
                 <h3 class="deal-title">Sweat Less, Walk More...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B00W85TAHE?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B00W85TAHE?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1460,7 +1530,7 @@
                 <h3 class="deal-title">Escape the Apocalypse Today!...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B09345T1HY?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B09345T1HY?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1472,7 +1542,7 @@
                 <h3 class="deal-title">Birthday Bracelet Magic for Girls...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D7BG2XS8?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0D7BG2XS8?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1484,7 +1554,7 @@
                 <h3 class="deal-title">Love Across the Unknown...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F6QPJMKJ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F6QPJMKJ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1496,7 +1566,7 @@
                 <h3 class="deal-title">Turtle Power for Your Face...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B07HLSCDD1?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B07HLSCDD1?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1508,7 +1578,7 @@
                 <h3 class="deal-title">TurboTax Made Easy...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DHYGWYJ6?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0DHYGWYJ6?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1520,7 +1590,7 @@
                 <h3 class="deal-title">Haaland Frenzy Hits Your Shelf...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GN89VWNR?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GN89VWNR?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1532,7 +1602,7 @@
                 <h3 class="deal-title">Here are the transformed lines of text:...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B086KSDTQ4?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B086KSDTQ4?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1544,7 +1614,7 @@
                 <h3 class="deal-title">Burn Forever, Store Forever...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BS6H9GLY?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0BS6H9GLY?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1556,7 +1626,7 @@
                 <h3 class="deal-title">Unbeatable Console Gaming Now Possible...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHHFBDNQ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHHFBDNQ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1568,7 +1638,7 @@
                 <h3 class="deal-title">The Glamorous Life of Evelyn Hugo...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B071Z8Z5C7?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B071Z8Z5C7?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1580,7 +1650,7 @@
                 <h3 class="deal-title">1. Girl's Safety Just Got Cooler...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHQ7P5ZX?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FHQ7P5ZX?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1592,7 +1662,7 @@
                 <h3 class="deal-title">Unlock the Secrets of Your Ancestors...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0741F3M7C?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0741F3M7C?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1604,7 +1674,7 @@
                 <h3 class="deal-title">Trump's Shadow Empire Exposed...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GW7DVH6S?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0GW7DVH6S?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1616,7 +1686,7 @@
                 <h3 class="deal-title">Wipe Out Mess, Wipe Out Stress...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B079VP6DH5?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B079VP6DH5?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1628,7 +1698,7 @@
                 <h3 class="deal-title">Unlock Your Creative Freedom Today...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B08264XHCZ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B08264XHCZ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1640,7 +1710,7 @@
                 <h3 class="deal-title">Save Your Floor from Damage...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F2GMVG7T?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0F2GMVG7T?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1652,7 +1722,7 @@
                 <h3 class="deal-title">Escape Reality with Dungeon Crawler Carl...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B08V8877BY?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B08V8877BY?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1664,7 +1734,7 @@
                 <h3 class="deal-title">Protect Your Screen, Protect Your Life...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FDQK69GQ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0FDQK69GQ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1676,7 +1746,7 @@
                 <h3 class="deal-title">Tropical Luau Party Decorations Unleashed...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CR6SG9NZ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CR6SG9NZ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1688,7 +1758,7 @@
                 <h3 class="deal-title">Salad in a Snap Delivered...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CCSTSJD5?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CCSTSJD5?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1700,7 +1770,7 @@
                 <h3 class="deal-title">Sticky Situation Solved...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CHTZD63Q?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0CHTZD63Q?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1712,7 +1782,7 @@
                 <h3 class="deal-title">Clean Hands, Clear Mind...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B081FFRGZB?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B081FFRGZB?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1724,7 +1794,7 @@
                 <h3 class="deal-title">1. Revolutionize Your Smile Today...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B083JHCCV2?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B083JHCCV2?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1736,7 +1806,7 @@
                 <h3 class="deal-title">1. Protect Your iPad Style...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B0B8STRJYJ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B0B8STRJYJ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>
@@ -1748,7 +1818,7 @@
                 <h3 class="deal-title">Hydrate On-the-Go Without the Spill...</h3>
                 <div class="deal-meta">
                     <span class="deal-price"></span>
-                    <a class="deal-btn" href="https://www.amazon.com/dp/B085DTZQNZ?tag=smartcart0fd-20" target="_blank">Get Deal ➔</a>
+                    <a class="deal-btn" href="https://www.amazon.com/dp/B085DTZQNZ?tag=smartcart0fd-20" target="_blank">Buy on Amazon</a>
                 </div>
             </div>
         </div>

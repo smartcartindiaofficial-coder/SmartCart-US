@@ -145,7 +145,7 @@ CATEGORIES = {
 }
 
 def generate_tags(name, specs):
-    base_tags = ["AmazonFinds", "CoolGadgets", "AmazonUS"]
+    base_tags = ["AmazonFinds", "CoolGadgets", "AmazonUSA"]
     keywords = [w for w in name.split() if len(w) > 4][:6]
     return ", ".join(list(set(base_tags + keywords)))
 
@@ -232,6 +232,11 @@ def get_bestsellers(driver, count):
             high_res_urls = []
             thumbs = []
 
+            availability = driver.find_element(By.CLASS_NAME, "primary-availability-message").text.strip()            
+            print(f"product availability: {availability}")
+            if 'Currently unavailable' in availability:
+                continue
+				
             try:
                 # Find all distinct structural image items that have dynamic image configurations
                 image_elements = driver.find_elements(By.XPATH, "//*[@data-a-dynamic-image]")
@@ -315,12 +320,35 @@ def get_bestsellers(driver, count):
                 except Exception as e:
                     print(f"❌ Download failed for {high_res}: {e}")
                     
+			# ─── 📈 NEW OFFER PERCENTAGE EXTRACTION LOGIC ───
+            # We need to capture the exact integer value (e.g., '65' from '65% OFF')
+            offer_percentage = 0
+            offer_scraped = ""                       
+            
+            elem = driver.find_element(By.CLASS_NAME, "apex-savings-percentage")
+            text = elem.text.strip()
+            print(f"offer text: {text}")
+            if '%' in text:
+                offer_scraped = text                        
+    
+            # Use Regex to extract only the integer digits before the percentage symbol
+            if offer_scraped:
+                offer_match = re.search(r'(\d+)\s*%', offer_scraped)
+                if offer_match:
+                    offer_percentage = int(offer_match.group(1))
+                    print(f"📈 [Offer] Scraped {offer_scraped} -> Result: {offer_percentage}")
+            
+            if offer_percentage == 0:
+                print("ℹ️ No prominent offer found on this page.")
+            # ───────────────────────────────────────────
+			
             bullets = driver.find_elements(By.CSS_SELECTOR, "#feature-bullets ul li span, #pqv-feature-bullets ul li span")
             specs = " | ".join([b.text.strip() for b in bullets if len(b.text.strip()) > 10][:7])
             
             products.append({
                 "asin": asin, "name": name, "link": f"{link}?tag=smartcart03b-21",
-                "images": img_paths, "specs": specs, "tags": generate_tags(name, specs)
+                "images": img_paths, "specs": specs, "tags": generate_tags(name, specs),
+                "offer_percentage": offer_percentage
             })
             driver.back()
             time.sleep(3)
@@ -328,20 +356,113 @@ def get_bestsellers(driver, count):
             continue
     return products
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 def scrape_specific_product(driver, product_url):
     print(f"🎯 Manual Target: {product_url}")
+    driver.set_window_size(1920, 1080)								  
     driver.get(product_url)
-    time.sleep(5)
-
+    driver.execute_script("window.scrollTo(0, 350);")												 
+    time.sleep(2)
+    driver.execute_script("window.scrollTo(0, 0);")            
+    time.sleep(30)
+    
+    # 1. Wait up to 10 seconds for the title to appear in the DOM
+    wait = WebDriverWait(driver, 30)
+	
     try:
-        name = driver.find_element(By.ID, "productTitle").text.strip()
-        asin = product_url.split("/dp/")[1].split("/")[0] if "/dp/" in product_url else "MANUAL"
-        bullets = driver.find_elements(By.CSS_SELECTOR, "#feature-bullets ul li span")
-        specs = " | ".join([b.text.strip() for b in bullets if len(b.text.strip()) > 10][:3])
+        page_source = driver.page_source.lower()
+
+        if any(term in page_source for term in ["captcha", "robot check", "validatecaptcha", "continue shopping"]):
+            print("⚠️ Amazon presented a CAPTCHA or Anti-Bot check!")
+        
+        # Try clicking the 'Continue shopping' button
         try:
-            price = driver.find_element(By.CSS_SELECTOR, "span.a-price-whole").text
-            price = f"₹{price}"
-        except:
+            button = driver.find_element(By.CSS_SELECTOR, "button[type='submit'].a-button-text")
+            button.click()
+            time.sleep(10)
+        except Exception as e:
+            print(f"Could not click 'Continue shopping' button: {e}")
+            
+        # Re-verify if we are still on a captcha page
+        if "validatecaptcha" in driver.page_source.lower():
+            print("❌ Still blocked by captcha.")
+            return None
+
+        # Fallback element checking for Product Title
+        name = ""
+        title_selectors = ["#productTitle", "#title", "h1.a-size-large", "span#productTitle"]
+        for selector in title_selectors:
+            try:
+                elem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+                name = elem.text.strip()
+                if name:
+                    break
+            except Exception:
+                continue
+
+        # if not name:
+        #     source_code = driver.page_source
+        #     print(f"source_code: {source_code}")
+
+        if not name:
+            print("❌ Could not locate product title using standard selectors.")
+            return None
+
+        # 2. Extract ASIN directly from driver.current_url after all redirects complete
+        current_url = driver.current_url
+        asin_match = re.search(r'/(?:dp|gp/product)/([A-Z0-9]{10})', current_url)
+        if asin_match:
+            asin = asin_match.group(1)
+        else:
+            try:
+                asin = driver.find_element(By.ID, "ASIN").get_attribute("value")
+            except Exception:
+                asin = "MANUAL"
+
+        print(f"🆔 Resolved ASIN: {asin}")
+
+        # ─── 📈 NEW OFFER PERCENTAGE EXTRACTION LOGIC ───
+        # We need to capture the exact integer value (e.g., '65' from '65% OFF')
+        offer_percentage = 0
+        offer_scraped = ""
+        
+        # Priority selectors: The inline price widget often contains the true offer
+        # Selector 1: The 'savingPercentage' element, common on deals
+        # Selector 2: General price element with '%' symbol
+        discount_selectors = ["span.savingPercentage", "span.a-size-large.a-color-price", "span#price_inside_buybox_badging_text", "span.reinventPriceSavingsPercentageMargin"]
+        
+        for selector in discount_selectors:
+            try:
+                elem = driver.find_element(By.CLASS_NAME, "apex-savings-percentage")
+                text = elem.text.strip()
+                if '%' in text:
+                    offer_scraped = text
+                    break
+            except Exception:
+                continue
+
+        # Use Regex to extract only the integer digits before the percentage symbol
+        if offer_scraped:
+            offer_match = re.search(r'(\d+)\s*%', offer_scraped)
+            if offer_match:
+                offer_percentage = int(offer_match.group(1))
+                print(f"📈 [Offer] Scraped {offer_scraped} -> Result: {offer_percentage}")
+        
+        if offer_percentage == 0:
+            print("ℹ️ No prominent offer found on this page.")
+        # ───────────────────────────────────────────
+
+        # Extract specifications / bullets
+        bullets = driver.find_elements(By.CSS_SELECTOR, "#feature-bullets ul li span, #pqv-feature-bullets ul li span")
+        specs = " | ".join([b.text.strip() for b in bullets if len(b.text.strip()) > 10][:3])
+		
+		# Extract price safely
+        try:
+            price_elem = driver.find_element(By.CSS_SELECTOR, "span.a-price-whole, span.a-offscreen")
+            price = f"₹{price_elem.text.strip()}"
+        except Exception:
             price = "Check Link"
 
         img_paths = []
@@ -391,7 +512,8 @@ def scrape_specific_product(driver, product_url):
             "link": f"https://www.amazon.com/dp/{asin}?tag={os.getenv('Affiliate_Code')}",
             "price": price,
             "specs": specs,
-            "images": img_paths
+            "images": img_paths,
+            "offer_percentage": offer_percentage  # 🚀 Added parameter
         }
     except Exception as e:
         print(f"❌ Manual Scrape Failed: {e}")

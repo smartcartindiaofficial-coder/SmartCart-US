@@ -13,6 +13,7 @@ from google import genai
 from google.genai import types
 
 from dotenv import load_dotenv
+from selenium.webdriver.common.by import By
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(SCRIPT_DIR, 'Config.env')
@@ -23,8 +24,10 @@ import editor
 import uploader
 #import insta_uploader
 #import telegram_poster
-import thumbnail_engine 
+import thumbnail_engine
+#import pinterest_uploader
 
+#from pinterest_uploader import PinterestUploader
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -49,17 +52,17 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 # Selected 5 premium niche tags per category to ensure optimal indexing 
 # on both YouTube Shorts and Instagram Reels safely.
 CATEGORY_HASHTAGS = {
-    "Baby Products": ["#BabyProducts", "#ParentingHacks", "#BabyMustHaves", "#BabyRegistry", "#SmartCartUS"],
-    "Computers & Accessories": ["#TechFinds", "#DeskSetup", "#TechGadgets", "#PCGaming", "#SmartCartUS"],
-    "Home & Kitchen": ["#KitchenGadgets", "#HomeKitchen", "#KitchenHacks", "#SmartHomeTech", "#SmartCartUS"],
-    "Home Improvement": ["#HomeImprovement", "#DIYProjects", "#SmartHome", "#HardwareTools", "#SmartCartUS"],
-    "Car & Motorbike": ["#CarAccessories", "#CarGadgets", "#MotorbikeLife", "#AutomotiveFinds", "#SmartCartUS"],
-    "Clothing & Accessories": ["#FashionFinds", "#OOTDUS", "#AmazonFashion", "#StyleInspiration", "#SmartCartUS"],
-    "Jewellery": ["#JewelleryDesign", "#FashionJewellery", "#AccessoriesLovers", "#JewelleryDeals", "#SmartCartUS"],
-    "Default": ["#AmazonFinds", "#TrendingGadgets", "#SmartCartUS", "#ViralProducts", "#DailyDeals","#Amazon", "#Trending", "#Viral", "#Deals","#Gadgets","#Smart"]
+    "Baby Products": ["#BabyProducts", "#ParentingHacks", "#BabyMustHaves", "#BabyRegistry", "#SmartCartUSA"],
+    "Computers & Accessories": ["#TechFinds", "#DeskSetup", "#TechGadgets", "#PCGaming", "#SmartCartUSA"],
+    "Home & Kitchen": ["#KitchenGadgets", "#HomeKitchen", "#KitchenHacks", "#SmartHomeTech", "#SmartCartUSA"],
+    "Home Improvement": ["#HomeImprovement", "#DIYProjects", "#SmartHome", "#HardwareTools", "#SmartCartUSA"],
+    "Car & Motorbike": ["#CarAccessories", "#CarGadgets", "#MotorbikeLife", "#AutomotiveFinds", "#SmartCartUSA"],
+    "Clothing & Accessories": ["#FashionFinds", "#OOTDUSA", "#AmazonFashion", "#StyleInspiration", "#SmartCartUSA"],
+    "Jewellery": ["#JewelleryDesign", "#FashionJewellery", "#AccessoriesLovers", "#JewelleryDeals", "#SmartCartUSA"],
+    "Default": ["#AmazonFinds", "#TrendingGadgets", "#SmartCartUSA", "#ViralProducts", "#DailyDeals","#Amazon", "#Trending", "#Viral", "#Deals","#Gadgets","#Smart"]
 }
 
-def reframe_product_for_youtube(raw_name, raw_specs):
+def reframe_product_for_youtube(raw_name, raw_specs, offer):
     """
     Uses the free, blazing-fast Groq API to analyze complex Amazon
     product details and return highly tailored, viral marketing scripts.
@@ -68,7 +71,7 @@ def reframe_product_for_youtube(raw_name, raw_specs):
     if not api_key:
         print("⚠️ Groq API key missing in Config.env! Falling back to raw titles.")
         # Safe fallback so your automation loop doesn't crash if the key fails to load
-        return raw_name[:45], "Check out this amazing find on Amazon right now!"
+        return raw_name[:45], "Check out this amazing find on Amazon right now!", raw_name[:20]
 
     try:
         # Initialize the official Groq pipeline client
@@ -81,12 +84,14 @@ def reframe_product_for_youtube(raw_name, raw_specs):
 
         PRODUCT NAME: {raw_name}
         SPECIFICATIONS: {raw_specs}
+		Discount percentage: {offer}
 
-        OUTPUT REGULATION: You must return exactly 3 lines of text. Do not add introductions, explanations, or markdown symbols like asterisks.
+        OUTPUT REGULATION: You must return exactly 4 lines of text. Do not add introductions, explanations, or markdown symbols like asterisks and numbers.
 
         Line 1: Punchy Viral Title (Max 5 words, clear, NO technical model numbers).
-        Line 2: Catchy Hook Sentence (0-3 seconds of the video, focuses on an everyday problem or high curiosity, Max 10 words).
-        Line 3: Short Script Body (3-12 seconds of the video, highlights 2 major lifestyle benefits naturally, Min 10 and Max 15 words).
+        Line 2: Catchy Hook Sentence (0-5 seconds of the video, focuses on an everyday problem or high curiosity, Max 10 words).
+        Line 3: Short Script Body (6-20 seconds of the video, highlights 2 major lifestyle benefits naturally and highlighting about the discount offer, Min 15 and Max 20 words).
+        Line 4: Extract only the core Brand and Product Name/Category from the title below in 4 words or fewer. Strip all specs, colors, and marketing fluff, and return ONLY the result: {raw_name}
         """
 
         # Execute high-speed text inference using Llama 3
@@ -106,25 +111,24 @@ def reframe_product_for_youtube(raw_name, raw_specs):
         raw_output = chat_completion.choices[0].message.content.strip()
         lines = [line.strip() for line in raw_output.split('\n') if line.strip()]
 
-        if len(lines) >= 3:
-            # Line 1 becomes the overlay title for your video metadata and cards
-            viral_title = lines[0].replace("Line 1:", " ").replace('"', '').strip()
+        if len(lines) >= 4:
+            viral_title = lines[0].replace("Line 1:", "").replace('"', '').strip()
+            hook = lines[1].replace("Line 2:", "").strip()
+            body = lines[2].replace("Line 3:", "").strip()
+            product_name = lines[3].replace("Line 4:", "").strip()
             
-            # Clean up line tags if the AI prints them literally
-            hook = lines[1].replace("Line 2:", " ").strip()
-            body = lines[2].replace("Line 3:", " ").strip()
-            
-            # Combine hook and body into a smooth audio text script for edge_tts to read
-            voiceover_script_tmp = f"{hook}@{body}     Direct deal link is pinned in the comments below!"
-            voiceover_script = re.sub(r'\d+\.\s*', '', voiceover_script_tmp)
-            return viral_title, voiceover_script
+            voiceover_script_tmp = f"{hook} {body} Direct deal link is pinned in the comments below!"
+            voiceover_script = re.sub(r'^\d+\.\s*', '', voiceover_script_tmp)
+			
+            return viral_title, voiceover_script, product_name
         else:
-            return raw_name[:45], "Check out this trending Amazon asset find right now!"
+            # Always return 3 elements to prevent unpacking crashes
+            return raw_name[:45], "Check out this trending Amazon asset find right now!", raw_name[:20]
 
     except Exception as e:
         print(f"❌ Groq API Processing Failure: {e}")
-        fallback_script = "Check out this amazing find on Amazon right now! @ Click the link below to view current pricing and specs."
-        return raw_name[:45], fallback_script
+        fallback_script = "Check out this amazing find on Amazon right now! Click the link below to view current pricing and specs."
+        return raw_name[:45], fallback_script, raw_name[:20]
 
 def get_crisp_catchy_title(raw_name):
     """
@@ -215,17 +219,14 @@ def compile_landing_page(asin, name, product_url, local_image_path, price, outpu
         github_image_relative_path = "https://via.placeholder.com/150"
     # ────────────────────────────────────────
     
-    clean_title = name.replace('"', "'")[:75] + "..."
+    clean_title = name.replace('"', "'")[:50] + "..."
     
     new_card_html = f"""
         <div class="deal-card" id="card-{asin}">
-            <img class="deal-thumb" src="{github_image_relative_path}" alt="{clean_title}">
+            <img class="deal-thumb" src="{github_image_relative_path}" alt="{clean_title}" loading="lazy">
             <div class="deal-details">
                 <h3 class="deal-title">{clean_title}</h3>
-                <div class="deal-meta">
-                    <span class="deal-price"></span>
-                    <a class="deal-btn" href="{product_url}" target="_blank">Get Deal ➔</a>
-                </div>
+                <a class="deal-btn" href="{product_url}" target="_blank" rel="noopener">Buy on Amazon</a>
             </div>
         </div>
     """
@@ -237,7 +238,7 @@ def compile_landing_page(asin, name, product_url, local_image_path, price, outpu
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Best Daily Deals - SmartCart US 🔥</title>
+    <title>🔥 Best Daily Deals - SmartCart USA 🔥</title>
     <style>
         :root {{ --bg: #0d0d11; --card-bg: #16161f; --text: #f3f4f6; --accent: #ff9900; --border: #262636; }}
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -259,7 +260,7 @@ def compile_landing_page(asin, name, product_url, local_image_path, price, outpu
 </head>
 <body>
     <div class="header-panel">
-        <h1>🛒 SmartCart US Deals</h1>
+        <h1>🛒 SmartCart USA Deals</h1>
         <p>Click any product below to grab the live discount link direct from Amazon!</p>
     </div>
     <div class="deals-container" id="deals-wrapper">
@@ -339,7 +340,8 @@ def sync_landing_page_to_github():
         return True
         
     except subprocess.CalledProcessError as e:
-        error_output = e.stderr.lower() if e.stderr else ""
+																							   
+        error_output = (e.stderr or e.stdout or "").lower()
         if "nothing to commit" in error_output or "no changes added" in error_output or "up to date" in error_output:
             print("ℹ️ [GitHub Deployment] Storefront is already up to date.")
             return True
@@ -450,6 +452,7 @@ def start_daily_routine():
                 continue
             
             for i, item in enumerate(new_products):
+                offer_percentage = 0
                 print(f"✨ Found new product: {item['name'][:50]}...")
                 asin = item.get('asin')
 
@@ -460,9 +463,10 @@ def start_daily_routine():
                 safe_name = item.get('name')
                 specs = item.get('specs', '').replace(" | ","\n-")
                 temp_images = item.get('images', [])
+                offer_percentage = item.get('offer_percentage')											   
 
                 if not temp_images:
-                    print("⚠️ Missing images for this selection. Retrying loop...")
+                    print("⚠️ Missing images for this selection. Retrying loop...{i}")
                     continue
 
                 # Let the loop know we found a valid product so we can terminate the while condition
@@ -479,13 +483,14 @@ def start_daily_routine():
                         shutil.move(img, dest)
                         final_images.append(dest)            
                 
-                viral_title, viral_voiceover_script = reframe_product_for_youtube(safe_name, specs)
+                viral_title, viral_voiceover_script, ProductName = reframe_product_for_youtube(safe_name, specs, offer_percentage)
                 voice_script = f"{viral_title}. {viral_voiceover_script}."
                 print(f"💬 Generated script text: {voice_script}")
 
                 print("🎨 Invoking Dynamic Thumbnail Engine...")
                 generated_thumb_path = thumbnail_engine.generate_thumbnail_multi(
-                    asin=asin, product_name=viral_title, specifications=[], image_paths_list=final_images
+                    asin=asin, product_name=viral_title, specifications=[], image_paths_list=final_images,
+                    offer_percentage=offer_percentage
                 )
                 
                 video_render_images = final_images.copy()
@@ -506,6 +511,10 @@ def start_daily_routine():
 
                 description_text = (
                     f"📦 {viral_title}\n\nBuy Link: {product_url}\n\n"
+																								 
+																				   
+																				
+															 
                     "#(ad) As an Amazon Associate I earn from qualifying purchases.\n"
                     f"{hashtag_string_block}"
                 )
@@ -515,20 +524,40 @@ def start_daily_routine():
                     f.write(description_text)
 
                 youtube_url = uploader.upload_to_youtube(None, video_path, viral_title, description_text, backend_yt_tags)
-                # # insta_uploader.upload_to_instagram(video_path, description_text, product_url)
-                # # telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url=youtube_url)                
+                # insta_uploader.upload_to_instagram(video_path, description_text, product_url)
+                # telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url=youtube_url)                
 
+				# video_file = video_path
+                # product_title = viral_title  # generated from Groq LLM
+                # product_desc = description_text  # generated script + hashtags
+                # affiliate_link = os.getenv('Affiliate_Code')  # Amazon affiliate link[cite: 2, 3]
+                # board_id = os.getenv("PINTEREST_BOARD_ID")
+
+                # # 📌 Publish to Pinterest
+                # try:
+                #     pin_bot = PinterestUploader()
+                #     pin_bot.create_video_pin(
+                #         board_id=board_id,
+                #         title=product_title,
+                #         description=product_desc,
+                #         link=affiliate_link,
+                #         video_path=video_file
+                #     )
+                # except Exception as e:
+                #     print(f"⚠️ Pinterest Posting Error: {e}")
+				
                 record_upload(asin, viral_title)
 
                 primary_thumbnail = final_images[0] if final_images else ""
                 compile_landing_page(
-                    asin=asin, name=viral_title, product_url=product_url,
+                    asin=asin, name=ProductName, product_url=product_url,
                     local_image_path=primary_thumbnail, price=item.get('price', 'Check Price')
                 )
 
                 print("✅ Successfully processed one product. Exiting pool loop.")
                 sync_landing_page_to_github()
                 break                
+				
         finally:
             driver.quit()
             print("🧹 Cleaning up unused product images...")
@@ -567,8 +596,12 @@ def run_manual_post(url):
         driver = webdriver.Chrome(options=options)
     
     try:
+        driver.get(url)
+        time.sleep(60)
+        current_url = driver.current_url #.split("?")[0]
+		
         # 1. Scrape the data
-        product = scout.scrape_specific_product(driver, url)
+        product = scout.scrape_specific_product(driver, current_url)
         if not product:
             return
 
@@ -578,11 +611,7 @@ def run_manual_post(url):
             return
         
         # 3. PREPARE PATHS 
-        #safe_name = get_crisp_catchy_title(product['name'])
         safe_name = product['name']
-
-        # if len(safe_name) > 100:
-        #     safe_name = safe_name[:100].strip()
 
         specs = product['specs'].replace(" | ","\n-")
 
@@ -608,6 +637,7 @@ def run_manual_post(url):
                     print(f"⚠️ Could not move image: {e}")        
 
         product['images'] = archived_images
+        passed_offer_percentage = product['offer_percentage']													 
 
         if not archived_images:
             print("❌ TERMINATING: No valid product images were successfully scraped from Amazon. Video skipped.")
@@ -616,12 +646,14 @@ def run_manual_post(url):
         # 5. CREATE VIDEO 
         print(f"🎬 Generating Manual Video for: {safe_name[:30]}")
         
-        viral_title, viral_voiceover_script = reframe_product_for_youtube(safe_name, specs)
+        viral_title, viral_voiceover_script, ProductName = reframe_product_for_youtube(safe_name, specs, passed_offer_percentage)
         
         # Construct a high-retention narration voice hook
         voice_script = f"{viral_title}.{viral_voiceover_script}."
         print(f"💬 Generated script text: {voice_script}")
         # ───────────────────────────────────────────────────────────
+
+		
 
         # ─── NEW: GENERATE THE DYNAMIC THUMBNAIL FIRST ───
         print("🎨 Invoking Dynamic Thumbnail Engine to compile video hook frame...")
@@ -632,7 +664,8 @@ def run_manual_post(url):
             asin=product['asin'],
             product_name=viral_title, # Pass the viral clean name for high-impact typography
             specifications=[],
-            image_paths_list=product['images']
+            image_paths_list=product['images'],
+            offer_percentage=passed_offer_percentage
         )
         
         # If the engine compiles successfully, slide it into the absolute front of the video list
@@ -667,11 +700,12 @@ def run_manual_post(url):
 
         # 6. SAVE DESCRIPTION FILE (Loaded with contextual optimization strings)
         description_text = (
-            f"📦 {safe_name}\n\n"
-            #f"Features:\n-{specs}\n\n"        
-            f"Buy Link: {product_url}\n\n"
-            "#(ad) As an Amazon Associate I earn from qualifying purchases.\n"
-            f"{hashtag_string_block}" # Placed perfectly at the baseline footer
+             f"📦 {viral_title} - \nBuy Link: {product_url}\n\n"
+            "website: https://smartcartindiaofficial-coder.github.io/SmartCart-US/ \n"
+            #"Instagram: https://www.instagram.com/smartcartindiaofficial\n"
+            "YouTube: https://www.youtube.com/@SmartCartUSOfficial\n"
+            #"Telegram: t.me/smartCartIndiaOfficial\n"
+            "#(ad) As an Amazon Associate I earn from qualifying purchases."
         )
         
         desc_path = os.path.join(folder, "description.txt")
@@ -680,14 +714,14 @@ def run_manual_post(url):
 
         # 7. POST TO PLATFORMS        
         # YouTube (API Method - Returns YouTube Link String)
-        tags = "amazon, deals, US, gadget"
+        tags = "amazon, deals, USA, gadget"
         youtube_url = uploader.upload_to_youtube(None, video_path, viral_title, description_text, backend_yt_tags)
 
-        # # Pass that exact youtube_url string into your updated uploader module!
-        # insta_uploader.upload_to_instagram(video_path, description_text)
+        # Pass that exact youtube_url string into your updated uploader module!
+        # insta_uploader.upload_to_instagram(video_path, description_text, product_url)
 
-        # # # Telegram (Funnel the captured YouTube URL string directly into our layout parameter)
-        # telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url = '')
+        # Telegram (Funnel the captured YouTube URL string directly into our layout parameter)
+        # telegram_poster.post_to_telegram(viral_title, product_url, video_path, youtube_url = youtube_url)
 
         # 8. RECORD HISTORY
         record_upload(product['asin'], viral_title)
@@ -701,7 +735,7 @@ def run_manual_post(url):
         
         compile_landing_page(
             asin=product['asin'],
-            name=viral_title,
+            name=ProductName,
             product_url=product_url,
             local_image_path=primary_thumbnail, # Passing the local file path
             price=product.get('price', 'Check Price')
@@ -714,16 +748,61 @@ def run_manual_post(url):
         driver.quit()
         print("🧹 Cleaning up unused product images...")
         cleanup_temp_files()
+
+
+def process_manual_queue(file_name="manual_urls.txt"):
+    """
+    Checks if manual_urls.txt exists and contains a valid URL.
+    Processes the URL via run_manual_post and clears the file afterward.
+    """
+    manual_file_path = os.path.join(BASE_DIR, file_name)
+    
+    if not os.path.exists(manual_file_path):
+        return False
+
+    with open(manual_file_path, "r", encoding="utf-8") as f:
+        content = f.read().strip()
+
+    if not content:
+        print("ℹ️ Manual queue file is empty. Proceeding to daily routine.")
+        return False
+
+    # Extract the raw HTTP/HTTPS URL (handles extra text pasted from Android share sheets)
+    url_match = re.search(r'https?://[^\s]+', content)
+    if not url_match:
+        print("⚠️ No valid URL found in manual_urls.txt. Clearing invalid content.")
+        open(manual_file_path, "w", encoding="utf-8").close()
+        return False
+
+    target_url = url_match.group(0)
+    print(f"🚀 Found manual trigger URL: {target_url}")    
+
+    try:
+        run_manual_post(target_url)
+    except Exception as e:
+        print(f"❌ Error executing manual post: {e}")
+    finally:
+        # Clear the file so it won't re-run on subsequent executions
+        open(manual_file_path, "w", encoding="utf-8").close()
+        print("🧹 Cleared manual_urls.txt.")
+
+    return True		   
         
 
 if __name__ == "__main__":
     is_github_pipeline = os.environ.get("GITHUB_ACTIONS") == "true"
+	
     if not is_github_pipeline:
         pull_latest_changes()
     else:
         print("Running inside GitHub Actions pipeline. Skipping git pull.")
-        
-    start_daily_routine()    
+		
+    # 1. First check if there is a manual URL waiting to be posted
+    processed_manual = process_manual_queue("manual_urls.txt")
+
+    # 2. If no manual URL was present, run the normal daily routine
+    if not processed_manual:
+        start_daily_routine()
     
-    # manual_url = "https://www.amazon.in/dp/B09XML6PPD"
+    # manual_url = "https://www.amazon.in/dp/B0FJG1V6RJ"
     # run_manual_post(manual_url)
