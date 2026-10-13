@@ -278,14 +278,14 @@ def create_pro_video(image_paths, product_name, output_path, voice_text=None):
     has_voice = False
     total_duration = 15  
 
-    if voice_text and generate_voiceover(voice_text, temp_tts_path):
-        try:
-            temp_audio = AudioFileClip(temp_tts_path)
-            total_duration = min(int(temp_audio.duration) + 1, 58) 
-            temp_audio.close()
-            has_voice = True
-        except Exception as audio_prep_err:
-            print(f"⚠️ Could not parse audio track dimensions: {audio_prep_err}")
+    # if voice_text and generate_voiceover(voice_text, temp_tts_path):
+    #     try:
+    #         temp_audio = AudioFileClip(temp_tts_path)
+    #         total_duration = min(int(temp_audio.duration) + 1, 58) 
+    #         temp_audio.close()
+    #         has_voice = True
+    #     except Exception as audio_prep_err:
+    #         print(f"⚠️ Could not parse audio track dimensions: {audio_prep_err}")
 
     fps = 24
     outro_duration = 3  
@@ -499,16 +499,16 @@ def create_pro_video(image_paths, product_name, output_path, voice_text=None):
                 base_music = AudioFileClip(selected_track)
                 bg_music_clip = safe_subclip(base_music, 0, video_clip.duration)
                 
-                if has_voice:
-                    voice_cutoff_time = total_duration - outro_duration
-                    duck_filter = lambda gf, t: gf(t) * np.where(t < voice_cutoff_time, 0.06, 0.18)[:, np.newaxis]
+                # if has_voice:
+                #     voice_cutoff_time = total_duration - outro_duration
+                #     duck_filter = lambda gf, t: gf(t) * np.where(t < voice_cutoff_time, 0.06, 0.18)[:, np.newaxis]
                     
-                    if hasattr(bg_music_clip, "fl"):
-                        bg_music_clip = bg_music_clip.fl(duck_filter)
-                    else:
-                        bg_music_clip = bg_music_clip.transform(duck_filter)
-                else:
-                    bg_music_clip = bg_music_clip.volumex(0.12) if hasattr(bg_music_clip, "volumex") else bg_music_clip.multiply_volume(0.12)
+                #     if hasattr(bg_music_clip, "fl"):
+                #         bg_music_clip = bg_music_clip.fl(duck_filter)
+                #     else:
+                #         bg_music_clip = bg_music_clip.transform(duck_filter)
+                # else:
+                #     bg_music_clip = bg_music_clip.volumex(0.12) if hasattr(bg_music_clip, "volumex") else bg_music_clip.multiply_volume(0.12)
                     
                 audio_layers.append(bg_music_clip)
 
